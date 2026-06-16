@@ -15,6 +15,7 @@ public class PreviewWebView : NativeControlHost
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             _webView = new WebView2();
+            _webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 30, 27, 75);
             
             // Initialization has to happen on the main thread
             _webView.EnsureCoreWebView2Async().ContinueWith(t => 

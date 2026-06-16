@@ -15,8 +15,8 @@ public class EmoteManager
     private readonly ConcurrentDictionary<string, string> _globalEmotes = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, string> _channelEmotes = new(StringComparer.Ordinal);
     
-    // Limits concurrent downloads so we don't spam 7TV CDN
-    private readonly SemaphoreSlim _downloadSemaphore = new(10, 10);
+    // Limits concurrent downloads so we don't spam 7TV CDN or kill the proxy
+    private readonly SemaphoreSlim _downloadSemaphore = new(4, 4);
 
     public EmoteManager()
     {
@@ -25,18 +25,74 @@ public class EmoteManager
         _httpClient.Timeout = TimeSpan.FromSeconds(30);
     }
 
+    private async Task<string> FetchWithMirrorFallbackAsync(string endpoint)
+    {
+        var mirrors = TwitchChatCore.Core.NetworkManager.GetApiMirrors();
+        Exception? lastEx = null;
+        foreach (var mirror in mirrors)
+        {
+            var url = $"{mirror}{endpoint}";
+            if (mirror.Contains("script.google.com"))
+            {
+                var cleanMirror = mirror;
+                if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
+                url = $"{cleanMirror}?url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
+            }
+            try
+            {
+                return await TwitchChatCore.Core.NetworkManager.GetClient().GetStringAsync(url);
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                var inner = ex.InnerException != null ? $" Inner: {ex.InnerException.Message}" : "";
+                Console.WriteLine($"Mirror fallback: failed to fetch {url}: {ex.Message}{inner}");
+            }
+        }
+        throw lastEx ?? new Exception("All 7TV API mirrors failed.");
+    }
+
     public async Task LoadGlobalEmotesAsync()
     {
         try
         {
-            Console.WriteLine("Loading 7TV global emotes...");
-            var json = await _httpClient.GetStringAsync("https://7tv.io/v3/emote-sets/global");
-            await ParseAndDownloadEmotesAsync(json, _globalEmotes, "global");
-            Console.WriteLine($"Loaded {_globalEmotes.Count} 7TV global emotes.");
+            await TwitchChatCore.Core.NetworkManager.LoadMirrorsAsync(); // Ensure mirrors are loaded
+
+            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "metadata");
+            if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
+            var cacheFile = Path.Combine(cacheDir, "global_emotes.json");
+
+            bool loadedFromCache = false;
+            if (File.Exists(cacheFile))
+            {
+                try
+                {
+                    var json = await File.ReadAllTextAsync(cacheFile);
+                    await ParseAndDownloadEmotesAsync(json, _globalEmotes, "global");
+                    loadedFromCache = true;
+                    Console.WriteLine($"Loaded {_globalEmotes.Count} global emotes from cache.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Cache corrupted for global emotes, ignoring cache. Error: {ex.Message}");
+                    File.Delete(cacheFile);
+                }
+            }
+
+            if (!loadedFromCache || (DateTime.Now - File.GetLastWriteTime(cacheFile)).TotalDays >= 7)
+            {
+                Console.WriteLine("Fetching 7TV global emotes updates...");
+                var json = await FetchWithMirrorFallbackAsync("/v3/emote-sets/global");
+                
+                await File.WriteAllTextAsync(cacheFile, json);
+                await ParseAndDownloadEmotesAsync(json, _globalEmotes, "global");
+                Console.WriteLine($"Updated {_globalEmotes.Count} global emotes.");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load global 7TV emotes: {ex.Message}");
+            OnEmoteDownloadError?.Invoke("global", ex.Message);
         }
     }
 
@@ -44,23 +100,57 @@ public class EmoteManager
     {
         try
         {
-            Console.WriteLine($"Loading 7TV channel emotes for {channelName}...");
-            var json = await _httpClient.GetStringAsync($"https://7tv.io/v3/users/twitch/{twitchUserId}");
-            using var doc = JsonDocument.Parse(json);
-            
-            if (doc.RootElement.TryGetProperty("emote_set", out var emoteSet) && 
-                emoteSet.ValueKind == JsonValueKind.Object)
+            await TwitchChatCore.Core.NetworkManager.LoadMirrorsAsync(); // Ensure mirrors are loaded
+
+            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "metadata");
+            if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
+            var cacheFile = Path.Combine(cacheDir, $"channel_{channelName}_emotes.json");
+
+            bool loadedFromCache = false;
+            if (File.Exists(cacheFile))
             {
-                var emoteSetJson = emoteSet.GetRawText();
-                await ParseAndDownloadEmotesAsync(emoteSetJson, _channelEmotes, channelName);
-                Console.WriteLine($"Loaded {_channelEmotes.Count} 7TV channel emotes for {channelName}.");
+                try
+                {
+                    var json = await File.ReadAllTextAsync(cacheFile);
+                    _channelEmotes.Clear();
+                    await ParseAndDownloadEmotesAsync(json, _channelEmotes, channelName);
+                    loadedFromCache = true;
+                    Console.WriteLine($"Loaded {_channelEmotes.Count} channel emotes from cache.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Cache corrupted for channel {channelName}, ignoring cache. Error: {ex.Message}");
+                    File.Delete(cacheFile);
+                }
+            }
+
+            if (!loadedFromCache || (DateTime.Now - File.GetLastWriteTime(cacheFile)).TotalDays > 1)
+            {
+                Console.WriteLine($"Fetching 7TV channel emotes updates for {channelName}...");
+                var userJson = await FetchWithMirrorFallbackAsync($"/v3/users/twitch/{twitchUserId}");
+                
+                using var doc = JsonDocument.Parse(userJson);
+                if (doc.RootElement.TryGetProperty("emote_set", out var emoteSet) && 
+                    emoteSet.ValueKind == JsonValueKind.Object)
+                {
+                    var emoteSetJson = emoteSet.GetRawText();
+                    await File.WriteAllTextAsync(cacheFile, emoteSetJson);
+                    
+                    _channelEmotes.Clear();
+                    await ParseAndDownloadEmotesAsync(emoteSetJson, _channelEmotes, channelName);
+                    Console.WriteLine($"Updated {_channelEmotes.Count} channel emotes.");
+                }
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load channel 7TV emotes for {channelName}: {ex.Message}");
+            OnEmoteDownloadError?.Invoke(channelName, ex.Message);
         }
     }
+
+    public static event Action<string, int, int, int, double>? OnEmoteDownloadProgress;
+    public static event Action<string, string>? OnEmoteDownloadError;
 
     private async Task ParseAndDownloadEmotesAsync(string json, ConcurrentDictionary<string, string> dictionary, string folderName)
     {
@@ -68,9 +158,11 @@ public class EmoteManager
         if (!Directory.Exists(emotesDir)) Directory.CreateDirectory(emotesDir);
 
         using var doc = JsonDocument.Parse(json);
-        if (doc.RootElement.TryGetProperty("emotes", out var emotesList) && emotesList.ValueKind == JsonValueKind.Array)
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("emotes", out var emotesList) && emotesList.ValueKind == JsonValueKind.Array)
         {
-            var downloadTasks = new List<Task>();
+            var emotesToDownload = new List<(string url, string path)>();
 
             foreach (var emote in emotesList.EnumerateArray())
             {
@@ -81,47 +173,121 @@ public class EmoteManager
                     if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(urlBase))
                     {
                         if (urlBase.StartsWith("//")) urlBase = "https:" + urlBase;
-                        var imgUrl = $"{urlBase}/1x.webp"; // Fetch 1x webp by default
+                        var imgUrl = $"{urlBase}/1x.webp";
                         var emoteId = data.GetProperty("id").GetString() ?? Guid.NewGuid().ToString();
                         
                         var localFileName = $"{emoteId}.webp";
                         var localFilePath = Path.Combine(emotesDir, localFileName);
                         var routeUrl = $"/cache/emotes/{folderName}/{localFileName}";
 
-                        // Add to dict pointing to local route
                         dictionary[name] = routeUrl;
 
-                        // Download missing emotes to disk asynchronously
                         if (!File.Exists(localFilePath))
                         {
-                            downloadTasks.Add(DownloadEmoteImageAsync(imgUrl, localFilePath));
+                            emotesToDownload.Add((imgUrl, localFilePath));
                         }
                     }
                 }
             }
 
-            // Await all downloads for this set
-            await Task.WhenAll(downloadTasks);
+            if (emotesToDownload.Count > 0)
+            {
+                int total = emotesToDownload.Count;
+                int processed = 0;
+                int successful = 0;
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                
+                OnEmoteDownloadProgress?.Invoke(folderName, 0, 0, total, 0);
+
+                var downloadTasks = new List<Task>();
+                foreach (var emote in emotesToDownload)
+                {
+                    downloadTasks.Add(Task.Run(async () => {
+                        bool ok = await DownloadEmoteImageAsync(emote.url, emote.path);
+                        int p = Interlocked.Increment(ref processed);
+                        if (ok) Interlocked.Increment(ref successful);
+                        double speed = p / stopwatch.Elapsed.TotalSeconds;
+                        OnEmoteDownloadProgress?.Invoke(folderName, p, successful, total, speed);
+                    }));
+                }
+
+                await Task.WhenAll(downloadTasks);
+            }
+            else
+            {
+                // Everything is cached, no downloads needed
+                OnEmoteDownloadProgress?.Invoke(folderName, 0, 0, 0, 0);
+            }
         }
     }
 
-    private async Task DownloadEmoteImageAsync(string url, string localFilePath)
+    private static byte[] DecodeIfBase64(byte[] data)
+    {
+        try
+        {
+            string text = System.Text.Encoding.UTF8.GetString(data);
+            if (string.IsNullOrWhiteSpace(text)) return data;
+            if (text.TrimStart().StartsWith("{") || text.TrimStart().StartsWith("[")) return data;
+
+            byte[] decoded = Convert.FromBase64String(text);
+            if (decoded.Length > 4)
+            {
+                if (decoded[0] == 'R' && decoded[1] == 'I' && decoded[2] == 'F' && decoded[3] == 'F') return decoded;
+                if (decoded[0] == 'G' && decoded[1] == 'I' && decoded[2] == 'F' && decoded[3] == '8') return decoded;
+                if (decoded[0] == 0x89 && decoded[1] == 0x50 && decoded[2] == 0x4E && decoded[3] == 0x47) return decoded;
+            }
+            return decoded; // Return decoded anyway if it's valid base64
+        }
+        catch { }
+        return data;
+    }
+
+    private async Task<bool> DownloadEmoteImageAsync(string originalUrl, string localFilePath)
     {
         await _downloadSemaphore.WaitAsync();
         try
         {
-            if (File.Exists(localFilePath)) return;
-            var bytes = await _httpClient.GetByteArrayAsync(url);
-            await File.WriteAllBytesAsync(localFilePath, bytes);
+            if (File.Exists(localFilePath)) return true;
+
+            var pathAndQuery = new Uri(originalUrl).PathAndQuery;
+            var mirrors = TwitchChatCore.Core.NetworkManager.GetCdnMirrors();
+            
+            foreach (var mirror in mirrors)
+            {
+                var url = $"{mirror}{pathAndQuery}";
+                if (mirror.Contains("script.google.com"))
+                {
+                    var cleanMirror = mirror;
+                    if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
+                    url = $"{cleanMirror}?url={Uri.EscapeDataString(originalUrl)}";
+                }
+                for (int i = 0; i < 2; i++)
+                {
+                    try
+                    {
+                        var bytes = await TwitchChatCore.Core.NetworkManager.GetClient().GetByteArrayAsync(url);
+                        bytes = DecodeIfBase64(bytes);
+                        await File.WriteAllBytesAsync(localFilePath, bytes);
+                        return true; // Success
+                    }
+                    catch (Exception)
+                    {
+
+                        await Task.Delay(500); // Wait 500ms before retry
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error downloading emote {url}: {ex.Message}");
+            Console.WriteLine($"Error downloading emote {originalUrl}: {ex.Message}");
+            return false;
         }
         finally
         {
             _downloadSemaphore.Release();
         }
+        return false;
     }
 
     public string ReplaceEmotes(string encodedText, Core.SevenTVMode mode)

@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="MainWindowTitle">Настройки Чата Twitch</sys:String>
+    <sys:String x:Key="DesignStudio">Студия Дизайна</sys:String>
+    <sys:String x:Key="FontSizeLabel">Размер Шрифта</sys:String>
+    <sys:String x:Key="MessageSpacingLabel">Расстояние (Spacing)</sys:String>
+    <sys:String x:Key="GlassOpacityLabel">Прозрачность Фона</sys:String>
+    <sys:String x:Key="TextColorLabel">Цвет Текста</sys:String>
+    <sys:String x:Key="StreamerEmotesCheck">Эмоуты Стримера</sys:String>
+    <sys:String x:Key="GlobalEmotesCheck">Твич Эмоуты</sys:String>
+    <sys:String x:Key="Global7TVEmotesCheck">Глобальные Эмоуты 7TV</sys:String>
+    <sys:String x:Key="TextOutlineCheck">Тень у текста</sys:String>
+    <sys:String x:Key="HideBackgroundCheck">Скрыть задний фон</sys:String>
+    <sys:String x:Key="HideBadgesCheck">Скрыть Значки (Badges)</sys:String>
+    <sys:String x:Key="DesignHintText">Перетаскивайте ползунки, чтобы увидеть изменения в реальном времени.</sys:String>
+    
+    <sys:String x:Key="LivePreviewTitle">Предпросмотр</sys:String>
+    <sys:String x:Key="LivePreviewSubtitle">Чат появится здесь при подключении.</sys:String>
+    
+    <sys:String x:Key="TechnicalSettingsTitle">Технические Настройки</sys:String>
+    <sys:String x:Key="AppLanguageLabel">Язык Приложения</sys:String>
+    <sys:String x:Key="TwitchUsernameLabel">Имя Стримера (Twitch)</sys:String>
+    <sys:String x:Key="ServerPortLabel">Локальный Порт</sys:String>
+    <sys:String x:Key="RestartRequiredHint">Требуется перезапуск приложения.</sys:String>
+    <sys:String x:Key="CircumventionMethodLabel">Метод Обхода Блокировок</sys:String>
+    <sys:String x:Key="ObsSourceUrlLabel">Ссылка для OBS (Browser Source)</sys:String>
+    <sys:String x:Key="CopyLinkButton">Скопировать Ссылку</sys:String>
+
+    <sys:String x:Key="MethodDirect">Прямое подключение</sys:String>
+    <sys:String x:Key="MethodHttp">HTTP Прокси</sys:String>
+    <sys:String x:Key="MethodSocks">SOCKS5</sys:String>
+    <sys:String x:Key="MethodSingbox">Sing-box (VLESS/Shadowsocks)</sys:String>
+    
+    <sys:String x:Key="ProxyAddressPortLabel">Адрес и порт прокси</sys:String>
+    <sys:String x:Key="SubProxyLinkLabel">Ссылка на подписку / сервер</sys:String>
+    <sys:String x:Key="SelectedServerLabel">Выбранный сервер</sys:String>
+    
+    <sys:String x:Key="DownloadCoreTitle">Требуется загрузка ядра</sys:String>
+    <sys:String x:Key="DownloadCoreDesc">Для работы метода VLESS/Shadowsocks требуется скачать ядро sing-box (~15 МБ). Вы хотите скачать его сейчас?</sys:String>
+    <sys:String x:Key="CancelBtn">Отмена</sys:String>
+    <sys:String x:Key="DownloadBtn">Скачать</sys:String>
+
+    <sys:String x:Key="StatusDownloading">Загрузка...</sys:String>
+    <sys:String x:Key="StatusFoundTesting">Найдено {0} серверов. Замер пинга...</sys:String>
+    <sys:String x:Key="StatusComplete">Загрузка и проверка завершены!</sys:String>
+    <sys:String x:Key="StatusFailedSub">Не удалось загрузить или распарсить подписку.</sys:String>
+    <sys:String x:Key="StatusManualAdded">Профиль добавлен вручную.</sys:String>
+    <sys:String x:Key="StatusCoreDownloading">Загрузка sing-box (~15 МБ)...</sys:String>
+    <sys:String x:Key="StatusCoreDownloaded">Ядро sing-box загружено успешно!</sys:String>
+    <sys:String x:Key="StatusCoreError">Ошибка загрузки: {0}</sys:String>
+    <sys:String x:Key="StatusStartingProxy">Запуск локального прокси...</sys:String>
+    <sys:String x:Key="StatusProxyStarted">Прокси успешно запущен!</sys:String>
+    <sys:String x:Key="StatusProxyDirect">Используется прямое подключение</sys:String>
+</ResourceDictionary>

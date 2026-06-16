@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="MainWindowTitle">Twitch Chat Settings</sys:String>
+    <sys:String x:Key="DesignStudio">Design Studio</sys:String>
+    <sys:String x:Key="FontSizeLabel">Font Size</sys:String>
+    <sys:String x:Key="MessageSpacingLabel">Message Spacing</sys:String>
+    <sys:String x:Key="GlassOpacityLabel">Glass Opacity</sys:String>
+    <sys:String x:Key="TextColorLabel">Text Color</sys:String>
+    <sys:String x:Key="StreamerEmotesCheck">Streamer Emotes</sys:String>
+    <sys:String x:Key="GlobalEmotesCheck">Twitch Emotes</sys:String>
+    <sys:String x:Key="Global7TVEmotesCheck">Global 7TV Emotes</sys:String>
+    <sys:String x:Key="TextOutlineCheck">Text Shadow</sys:String>
+    <sys:String x:Key="HideBackgroundCheck">Hide Background</sys:String>
+    <sys:String x:Key="HideBadgesCheck">Hide Badges</sys:String>
+    <sys:String x:Key="DesignHintText">Drag sliders to see real-time updates in the preview and on your stream.</sys:String>
+    
+    <sys:String x:Key="LivePreviewTitle">Live Preview</sys:String>
+    <sys:String x:Key="LivePreviewSubtitle">The overlay will render here once connected.</sys:String>
+    
+    <sys:String x:Key="TechnicalSettingsTitle">Technical Settings</sys:String>
+    <sys:String x:Key="AppLanguageLabel">App Language</sys:String>
+    <sys:String x:Key="TwitchUsernameLabel">Twitch Username</sys:String>
+    <sys:String x:Key="ServerPortLabel">Local Server Port</sys:String>
+    <sys:String x:Key="RestartRequiredHint">Requires app restart to apply.</sys:String>
+    <sys:String x:Key="CircumventionMethodLabel">Circumvention Method</sys:String>
+    <sys:String x:Key="ObsSourceUrlLabel">OBS Browser Source URL</sys:String>
+    <sys:String x:Key="CopyLinkButton">Copy Link to Clipboard</sys:String>
+
+    <sys:String x:Key="MethodDirect">Direct Connection</sys:String>
+    <sys:String x:Key="MethodHttp">HTTP Proxy</sys:String>
+    <sys:String x:Key="MethodSocks">SOCKS5</sys:String>
+    <sys:String x:Key="MethodSingbox">Sing-box (VLESS/Shadowsocks)</sys:String>
+    
+    <sys:String x:Key="ProxyAddressPortLabel">Proxy Address &amp; Port</sys:String>
+    <sys:String x:Key="SubProxyLinkLabel">Subscription / Proxy Link</sys:String>
+    <sys:String x:Key="SelectedServerLabel">Selected Server</sys:String>
+    
+    <sys:String x:Key="DownloadCoreTitle">Core Download Required</sys:String>
+    <sys:String x:Key="DownloadCoreDesc">The VLESS/Shadowsocks method requires downloading the sing-box core (~15 MB). Do you want to download it now?</sys:String>
+    <sys:String x:Key="CancelBtn">Cancel</sys:String>
+    <sys:String x:Key="DownloadBtn">Download</sys:String>
+
+    <sys:String x:Key="StatusDownloading">Downloading...</sys:String>
+    <sys:String x:Key="StatusFoundTesting">Found {0} profiles. Testing ping...</sys:String>
+    <sys:String x:Key="StatusComplete">Download &amp; Ping Test Complete!</sys:String>
+    <sys:String x:Key="StatusFailedSub">Failed to download or parse subscription.</sys:String>
+    <sys:String x:Key="StatusManualAdded">Profile added manually.</sys:String>
+    <sys:String x:Key="StatusCoreDownloading">Downloading sing-box (~15MB)...</sys:String>
+    <sys:String x:Key="StatusCoreDownloaded">Sing-box downloaded successfully!</sys:String>
+    <sys:String x:Key="StatusCoreError">Error downloading: {0}</sys:String>
+    <sys:String x:Key="StatusStartingProxy">Starting local proxy...</sys:String>
+    <sys:String x:Key="StatusProxyStarted">Proxy successfully started!</sys:String>
+    <sys:String x:Key="StatusProxyDirect">Using direct connection</sys:String>
+</ResourceDictionary>

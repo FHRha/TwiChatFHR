@@ -68,6 +68,8 @@ public class TwitchIrcClient
             });
 
             _webSocket = new ClientWebSocket();
+            // We intentionally do NOT set the proxy here. 
+            // Twitch Chat IRC connection always goes directly for fault tolerance.
             await _webSocket.ConnectAsync(new Uri("wss://irc-ws.chat.twitch.tv:443"), CancellationToken.None);
             
             await SendAsync("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
@@ -122,6 +124,14 @@ public class TwitchIrcClient
                         {
                             await ParseAndBroadcastMessageAsync(line);
                         }
+                        else if (line.Contains(" CLEARMSG "))
+                        {
+                            await HandleClearMsgAsync(line);
+                        }
+                        else if (line.Contains(" CLEARCHAT "))
+                        {
+                            await HandleClearChatAsync(line);
+                        }
                     }
 
                     // Keep the last incomplete part in the builder
@@ -144,7 +154,9 @@ public class TwitchIrcClient
             string color = "";
             string displayName = "";
             string text = "";
+            string messageId = "";
             var badgeUrls = new System.Collections.Generic.List<string>();
+            var twitchEmotes = new System.Collections.Generic.List<(int Start, int End, string Id)>();
 
             if (line.StartsWith("@"))
             {
@@ -156,6 +168,7 @@ public class TwitchIrcClient
                 {
                     if (tag.StartsWith("color=") && tag.Length > 6) color = tag.Substring(6);
                     if (tag.StartsWith("display-name=") && tag.Length > 13) displayName = tag.Substring(13);
+                    if (tag.StartsWith("id=") && tag.Length > 3) messageId = tag.Substring(3);
                     if (tag.StartsWith("room-id=") && tag.Length > 8)
                     {
                         var roomId = tag.Substring(8);
@@ -175,6 +188,29 @@ public class TwitchIrcClient
                             if (url != null)
                             {
                                 badgeUrls.Add(url);
+                            }
+                        }
+                    }
+                    if (tag.StartsWith("emotes=") && tag.Length > 7)
+                    {
+                        // Format: emotes=25:0-4,12-16/1902:6-10
+                        var emotesStr = tag.Substring(7);
+                        var emoteGroups = emotesStr.Split('/');
+                        foreach (var group in emoteGroups)
+                        {
+                            var parts = group.Split(':');
+                            if (parts.Length == 2)
+                            {
+                                var emoteId = parts[0];
+                                var ranges = parts[1].Split(',');
+                                foreach (var range in ranges)
+                                {
+                                    var bounds = range.Split('-');
+                                    if (bounds.Length == 2 && int.TryParse(bounds[0], out int start) && int.TryParse(bounds[1], out int end))
+                                    {
+                                        twitchEmotes.Add((start, end, emoteId));
+                                    }
+                                }
                             }
                         }
                     }
@@ -215,11 +251,48 @@ public class TwitchIrcClient
             if (string.IsNullOrEmpty(displayName)) displayName = "Unknown";
             if (string.IsNullOrEmpty(color)) color = GetDefaultColor(displayName);
 
-            var encodedText = System.Net.WebUtility.HtmlEncode(text);
-            var htmlText = _emoteManager.ReplaceEmotes(encodedText, ConfigManager.Settings.SevenTVEmotesMode);
+            string htmlText = text;
+
+            // Always generate HTML for all emotes so frontend can toggle them dynamically via CSS
+            if (twitchEmotes.Count > 0)
+            {
+                // Sort descending to not break indices when replacing
+                twitchEmotes.Sort((a, b) => b.Start.CompareTo(a.Start));
+                var builder = new StringBuilder();
+                int lastIndex = text.Length;
+
+                foreach (var em in twitchEmotes)
+                {
+                    // Safety check against surrogate issues or malformed data
+                    if (em.End < lastIndex && em.Start >= 0 && em.End >= em.Start && em.End < text.Length)
+                    {
+                        var emoteText = text.Substring(em.Start, em.End - em.Start + 1);
+                        var suffix = text.Substring(em.End + 1, lastIndex - em.End - 1);
+                        builder.Insert(0, System.Net.WebUtility.HtmlEncode(suffix));
+                        
+                        var originalUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{em.Id}/default/dark/1.0";
+                        var proxyUrl = $"/cache/image?url={Uri.EscapeDataString(originalUrl)}";
+                        
+                        builder.Insert(0, $"<span class=\"emote-container twitch-emote\" data-text=\"{System.Net.WebUtility.HtmlEncode(emoteText)}\"><img class=\"emote\" src=\"{proxyUrl}\" alt=\"emote\" /></span>");
+                        lastIndex = em.Start;
+                    }
+                }
+                var prefix = text.Substring(0, lastIndex);
+                builder.Insert(0, System.Net.WebUtility.HtmlEncode(prefix));
+                htmlText = builder.ToString();
+            }
+            else
+            {
+                htmlText = System.Net.WebUtility.HtmlEncode(text);
+            }
+            
+            // Now apply 7TV emotes over the already built HTML
+            // Always process both channel and global emotes so CSS can toggle them
+            htmlText = _emoteManager.ReplaceEmotes(htmlText, SevenTVMode.ChannelAndGlobal);
 
             var chatMessage = new
             {
+                Id = messageId,
                 Username = displayName,
                 Color = color,
                 Text = text,
@@ -242,6 +315,60 @@ public class TwitchIrcClient
         {
             var bytes = Encoding.UTF8.GetBytes(message + "\r\n");
             await _webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+    }
+
+    private async Task HandleClearMsgAsync(string line)
+    {
+        try
+        {
+            string targetMsgId = "";
+            if (line.StartsWith("@"))
+            {
+                var tagsEnd = line.IndexOf(' ');
+                var tags = line.Substring(1, tagsEnd - 1);
+                var tagParts = tags.Split(';');
+                foreach (var tag in tagParts)
+                {
+                    if (tag.StartsWith("target-msg-id=") && tag.Length > 14)
+                    {
+                        targetMsgId = tag.Substring(14);
+                        break;
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(targetMsgId))
+            {
+                var json = JsonSerializer.Serialize(new { Type = "ClearMessage", Id = targetMsgId });
+                await _chatHub.BroadcastMessageAsync(json);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ClearMsg Error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleClearChatAsync(string line)
+    {
+        try
+        {
+            // @tags :tmi.twitch.tv CLEARCHAT #channel :username
+            // or :tmi.twitch.tv CLEARCHAT #channel
+            string targetUsername = "";
+            var msgStart = line.IndexOf(" CLEARCHAT ");
+            msgStart = line.IndexOf(':', msgStart + 11);
+            if (msgStart > 0 && msgStart + 1 < line.Length)
+            {
+                targetUsername = line.Substring(msgStart + 1).Trim();
+            }
+
+            var json = JsonSerializer.Serialize(new { Type = "ClearChat", Username = targetUsername });
+            await _chatHub.BroadcastMessageAsync(json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ClearChat Error: {ex.Message}");
         }
     }
 

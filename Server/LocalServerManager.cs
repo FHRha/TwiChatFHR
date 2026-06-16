@@ -87,8 +87,8 @@ public class LocalServerManager
             RequestPath = "/cache/emotes"
         });
 
-        // Setup Badge Cache Route
-        _app.MapGet("/cache/badge", async context =>
+        // Setup Image Cache Route (for badges and twitch emotes)
+        _app.MapGet("/cache/image", async context =>
         {
             var url = context.Request.Query["url"].ToString();
             if (string.IsNullOrEmpty(url))
@@ -97,29 +97,32 @@ public class LocalServerManager
                 return;
             }
 
-            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "badges");
+            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "images");
             if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
+
+            string ext = ".png";
+            if (url.Contains(".gif", StringComparison.OrdinalIgnoreCase)) ext = ".gif";
+            else if (url.Contains(".webp", StringComparison.OrdinalIgnoreCase)) ext = ".webp";
 
             // Create a safe, unique filename based on the URL
             var safeFilename = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(url))
-                                .Replace('/', '_').Replace('+', '-').Replace('=', '.') + ".png";
+                                .Replace('/', '_').Replace('+', '-').Replace('=', '.') + ext;
             var filePath = Path.Combine(cacheDir, safeFilename);
 
             if (File.Exists(filePath))
             {
-                context.Response.ContentType = "image/png";
                 await context.Response.SendFileAsync(filePath);
                 return;
             }
 
             try
             {
-                using var httpClient = new System.Net.Http.HttpClient();
-                var bytes = await httpClient.GetByteArrayAsync(url);
+                var bytes = await TwitchChatCore.Core.NetworkManager.GetClient().GetByteArrayAsync(url);
+                
                 await File.WriteAllBytesAsync(filePath, bytes);
 
-                context.Response.ContentType = "image/png";
-                await context.Response.Body.WriteAsync(bytes);
+                // SendFileAsync will automatically set Content-Type based on extension
+                await context.Response.SendFileAsync(filePath);
             }
             catch
             {

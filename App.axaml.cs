@@ -15,18 +15,32 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
     }
 
+    public static void LoadLanguage(string lang)
+    {
+        var dict = new Avalonia.Markup.Xaml.Styling.ResourceInclude(new Uri("avares://TwitchChatCore/App.axaml"))
+        {
+            Source = new Uri($"avares://TwitchChatCore/Resources/Lang.{lang}.axaml")
+        };
+
+        if (Current?.Resources?.MergedDictionaries != null && Current.Resources.MergedDictionaries.Count > 0)
+        {
+            Current.Resources.MergedDictionaries[0] = dict;
+        }
+    }
+
     public override async void OnFrameworkInitializationCompleted()
     {
         try
         {
             TwitchChatCore.Core.ConfigManager.Load();
+            LoadLanguage(TwitchChatCore.Core.ConfigManager.Settings.Language);
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
+                desktop.MainWindow = new Views.MainWindow();
+
                 LocalServer = new LocalServerManager();
                 await LocalServer.StartAsync();
-
-                desktop.MainWindow = new Views.MainWindow();
                 
                 desktop.Exit += async (s, e) => 
                 {

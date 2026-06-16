@@ -3,45 +3,160 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:v="using:TwitchChatCore.Views"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:s="using:TwitchChatCore.Server"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
         x:Class="TwitchChatCore.Views.MainWindow"
-        Title="Twitch Chat Settings Wizard"
-        Width="900" Height="600"
-        Background="#1E1E1E">
+        Title="{DynamicResource MainWindowTitle}"
+        Width="1000" Height="650"
+        Background="#0F172A"
+        ExtendClientAreaToDecorationsHint="True"
+        WindowStartupLocation="CenterScreen">
 
-    <Window.Styles>
-        <!-- Adding local namespace locally inside the file just for the preview control if needed, but standard Avalonia handles it via xmlns:local -->
-    </Window.Styles>
-    <Grid ColumnDefinitions="300, *">
-        <!-- Settings Panel -->
-        <StackPanel Grid.Column="0" Margin="10" Spacing="10">
-            <TextBlock Text="Settings Wizard" FontSize="20" FontWeight="Bold" Foreground="White"/>
-            
-            <TextBlock Text="Twitch Username:" Foreground="White"/>
-            <TextBox Name="UsernameTextBox" Text="" TextChanged="TextBox_TextChanged" />
+    <Grid>
+        <Grid ColumnDefinitions="350, *" Margin="0, 30, 0, 0">
+            <!-- Settings Panel -->
+            <Border Grid.Column="0" Background="#1E293B" CornerRadius="0,16,16,0" Padding="24,24,4,24">
+                <Grid RowDefinitions="Auto, *">
+                    <!-- Emotes Download Progress -->
+                    <Border Grid.Row="0" Name="EmoteProgressPanel" Background="#D01E293B" Padding="16,12" CornerRadius="8" Margin="0,0,20,16" IsVisible="False" BorderBrush="#334155" BorderThickness="1">
+                        <StackPanel Spacing="6">
+                            <Grid>
+                                <TextBlock Name="EmoteProgressText" Text="Downloading 7TV Emotes" Foreground="#E2E8F0" FontSize="13" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                    <TextBlock Name="EmoteSpeedText" Text="0.0 em/s" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" />
+                                    <Button Name="RetryEmotesButton" Content="Retry" Click="RetryEmotes_Click" IsVisible="False" Padding="8,2" FontSize="11" Background="#334155" Foreground="#E2E8F0" CornerRadius="4" VerticalAlignment="Center" Cursor="Hand"/>
+                                </StackPanel>
+                            </Grid>
+                            <ProgressBar Name="EmoteProgressBar" Minimum="0" Maximum="100" Value="0" Height="6" CornerRadius="3" Foreground="#3B82F6" Background="#334155" />
+                            <TextBlock Name="EmoteErrorText" Text="" Foreground="#EF4444" FontSize="11" TextWrapping="Wrap" IsVisible="False" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
 
-            <TextBlock Text="Server Port (0 for auto, requires restart):" Foreground="White"/>
-            <TextBox Name="ServerPortTextBox" Text="0" TextChanged="TextBox_TextChanged" />
+                    <ScrollViewer Grid.Row="1">
+                        <StackPanel Spacing="16" Margin="0,0,20,0">
+                            <Grid>
+                                <TextBlock Text="{DynamicResource DesignStudio}" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF" />
+                                <Button Content="⚙️" HorizontalAlignment="Right" Background="Transparent" Foreground="#94A3B8" Click="OpenSettings_Click" Padding="8,4" />
+                            </Grid>
+                            
+                            <StackPanel Spacing="6" Margin="0,10,0,0">
+                                <Grid>
+                                    <TextBlock Text="{DynamicResource FontSizeLabel}" FontWeight="SemiBold"/>
+                                    <TextBlock Name="FontSizeValText" Text="14px" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
+                                </Grid>
+                                <Slider Name="FontSizeSlider" Minimum="10" Maximum="32" Value="14" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                            </StackPanel>
 
-            <TextBlock Text="Circumvention Method:" Foreground="White"/>
-            <ComboBox Name="MethodComboBox" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="ComboBox_SelectionChanged">
-                <ComboBoxItem>Direct Connection</ComboBoxItem>
-                <ComboBoxItem>HTTP Proxy</ComboBoxItem>
-                <ComboBoxItem>Socks5</ComboBoxItem>
-            </ComboBox>
+                            <StackPanel Spacing="6">
+                                <Grid>
+                                    <TextBlock Text="{DynamicResource MessageSpacingLabel}" FontWeight="SemiBold"/>
+                                    <TextBlock Name="SpacingValText" Text="4px" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
+                                </Grid>
+                                <Slider Name="SpacingSlider" Minimum="0" Maximum="24" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                            </StackPanel>
 
-            <TextBlock Text="OBS Browser Source URL:" Foreground="White" Margin="0,20,0,0"/>
-            <TextBox Name="ObsUrlTextBox" IsReadOnly="True" />
-            <Button Content="Copy URL" Click="CopyUrl_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                            <StackPanel Spacing="6">
+                                <Grid>
+                                    <TextBlock Text="{DynamicResource GlassOpacityLabel}" FontWeight="SemiBold"/>
+                                    <TextBlock Name="OpacityValText" Text="45%" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
+                                </Grid>
+                                <Slider Name="OpacitySlider" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                            </StackPanel>
 
-        </StackPanel>
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="{DynamicResource TextColorLabel}" FontWeight="SemiBold"/>
+                                <ColorPicker Name="TextColorPicker" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Left" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                            </StackPanel>
 
-        <!-- Live Preview Panel (WebView2) -->
-        <Border Grid.Column="1" Background="Black" BorderBrush="#333" BorderThickness="1,0,0,0">
-            <Grid>
-                <TextBlock Text="Live Preview" Foreground="#555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <v:PreviewWebView />
+                            <Separator Background="#334155" Margin="0,5" Height="1"/>
+
+                            <Grid ColumnDefinitions="*,*">
+                                <StackPanel Grid.Column="0" Spacing="8">
+                                    <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                    <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                    <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                    <CheckBox Name="TextOutlineCheck" Content="{DynamicResource TextOutlineCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="8">
+                                    <CheckBox Name="HideBackgroundCheck" Content="{DynamicResource HideBackgroundCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                    <CheckBox Name="HideBadgesCheck" Content="{DynamicResource HideBadgesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Background="#334155" Margin="0,5" Height="1"/>
+
+                            <TextBlock Text="{DynamicResource DesignHintText}" TextWrapping="Wrap" Foreground="#64748B" FontSize="12"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Live Preview Panel (WebView2) -->
+            <Grid Name="PreviewPanel" Grid.Column="1" Margin="24">
+                <Border Background="#1E1B4B" CornerRadius="12" BorderBrush="#334155" BorderThickness="1" ClipToBounds="True">
+                    <Grid>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                            <TextBlock Text="{DynamicResource LivePreviewTitle}" Foreground="#64748B" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource LivePreviewSubtitle}" Foreground="#475569" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <v:PreviewWebView Margin="12" />
+                    </Grid>
+                </Border>
             </Grid>
+        </Grid>
+
+        <!-- Dim Overlay -->
+        <Border Name="OverlayBackground" Background="#A0000000" IsVisible="False" ZIndex="10" />
+
+
+        <!-- Settings Modal Card -->
+        <Border Name="SettingsModal" IsVisible="False" ZIndex="11" Background="#1E293B" Padding="32" 
+                CornerRadius="16" BoxShadow="0 20 40 0 #A0000000"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,40" Width="450" MaxHeight="550">
+            <ScrollViewer>
+            <StackPanel Spacing="16" Margin="0,0,10,0">
+                <Grid>
+                    <TextBlock Text="{DynamicResource TechnicalSettingsTitle}" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" />
+                    <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" Foreground="#64748B" Click="CloseSettings_Click" Padding="8,4" />
+                </Grid>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{DynamicResource AppLanguageLabel}" FontWeight="SemiBold"/>
+                    <ComboBox Name="LangComboBox" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="LangComboBox_SelectionChanged">
+                        <ComboBoxItem>Русский</ComboBoxItem>
+                        <ComboBoxItem>English</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{DynamicResource TwitchUsernameLabel}" FontWeight="SemiBold"/>
+                    <TextBox Name="UsernameTextBox" TextChanged="TextBox_TextChanged" Watermark="e.g. FHRha"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{DynamicResource ServerPortLabel}" FontWeight="SemiBold"/>
+                    <TextBox Name="ServerPortTextBox" Text="0" TextChanged="TextBox_TextChanged" Watermark="0 for auto-assign"/>
+                    <TextBlock Text="{DynamicResource RestartRequiredHint}" FontSize="11" Foreground="#94A3B8"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <Grid>
+                        <TextBlock Text="Custom Worker URL" FontWeight="SemiBold"/>
+                        <Button Content="How to create worker?" Click="OpenWorkerGuide_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#3B82F6" Padding="4,0" Cursor="Hand" FontSize="12"/>
+                    </Grid>
+                    <TextBox Name="CustomWorkerTextBox" TextChanged="TextBox_TextChanged" Watermark="https://..."/>
+                    <TextBlock Text="Local fallback proxy URL for 7TV (e.g. Cloudflare Worker)" FontSize="11" Foreground="#94A3B8"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{DynamicResource ObsSourceUrlLabel}" FontWeight="SemiBold"/>
+                    <TextBox Name="ObsUrlTextBox" IsReadOnly="True" />
+                    <Button Content="{DynamicResource CopyLinkButton}" Click="CopyUrl_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+            </StackPanel>
+            </ScrollViewer>
         </Border>
+
     </Grid>
 </Window>
+

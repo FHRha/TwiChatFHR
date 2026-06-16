@@ -9,14 +9,12 @@ namespace TwitchChatCore.Server;
 
 public class BadgeManager
 {
-    private readonly HttpClient _httpClient = new();
+
     private readonly ConcurrentDictionary<string, string> _globalBadges = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _channelBadges = new(StringComparer.OrdinalIgnoreCase);
     
     public BadgeManager() 
     { 
-        _httpClient.Timeout = TimeSpan.FromSeconds(10);
-        _httpClient.DefaultRequestHeaders.Add("User-Agent", "TwitchChatCore/1.0");
     }
 
     public async Task LoadGlobalBadgesAsync()
@@ -74,7 +72,7 @@ public class BadgeManager
                 try
                 {
                     // Try Github first
-                    json = await _httpClient.GetStringAsync(githubUrl);
+                    json = await TwitchChatCore.Core.NetworkManager.GetClient().GetStringAsync(githubUrl);
                     fetchSuccess = true;
                     Console.WriteLine("Successfully fetched global badges from GitHub repository.");
                 }
@@ -82,7 +80,7 @@ public class BadgeManager
                 {
                     // Fallback to IVR if Github is 404/not found
                     Console.WriteLine("GitHub repo badges not found, falling back to IVR API.");
-                    json = await _httpClient.GetStringAsync("https://api.ivr.fi/v2/twitch/badges/global");
+                    json = await TwitchChatCore.Core.NetworkManager.GetClient().GetStringAsync("https://api.ivr.fi/v2/twitch/badges/global");
                     fetchSuccess = true;
                 }
 
@@ -122,7 +120,8 @@ public class BadgeManager
             // Always update channel badges in background if older than 1 day or not cached
             if (!loadedFromCache || (DateTime.Now - File.GetLastWriteTime(cacheFile)).TotalDays > 1)
             {
-                var newJson = await _httpClient.GetStringAsync($"https://api.ivr.fi/v2/twitch/badges/channel?login={channelLogin}");
+                var newJson = await TwitchChatCore.Core.NetworkManager.GetClient().GetStringAsync($"https://api.ivr.fi/v2/twitch/badges/channel?login={channelLogin}");
+                
                 await File.WriteAllTextAsync(cacheFile, newJson);
                 _channelBadges.Clear();
                 ParseAndPopulate(newJson, _channelBadges);
