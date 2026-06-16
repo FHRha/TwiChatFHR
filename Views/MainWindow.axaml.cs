@@ -297,7 +297,7 @@ public partial class MainWindow : Window
 </head>
 <body>
     <h1>Создание пуленепробиваемого 7TV Proxy (через Google)</h1>
-    <p>Так как Cloudflare, Deno и другие сервисы блокируются вашим провайдером, мы используем сервера <b>Google</b>. Их в РФ не блокируют, иначе сломаются все Android-смартфоны и сервисы.</p>
+    <p>Так как многие сторонние сервисы могут блокироваться вашим провайдером, мы предлагаем использовать сервера <b>Google</b>. Их в РФ не блокируют, иначе сломаются все Android-смартфоны и сервисы.</p>
     
     <div class='step'>
         <h2>Шаг 1: Создание скрипта</h2>
@@ -353,9 +353,9 @@ public partial class MainWindow : Window
         <h2>Шаг 4: Настройка в TwiChatFHR</h2>
         <ol>
             <li>Откройте настройки TwiChatFHR.</li>
-            <li>В поле <b>Custom Worker URL</b> вставьте вашу длинную скопированную ссылку из Google, а в самый конец ссылки ОБЯЗАТЕЛЬНО допишите <b class='highlight'>?url=https://api.7tv.app</b></li>
-            <li>Пример: <code>https://script.google.com/macros/s/ВАШ_ИД/exec<b style='color:#10B981;'>?url=https://api.7tv.app</b></code></li>
-            <li>Готово! Приложение начнет работать через сервера Google.</li>
+            <li>В поле <b>Custom Worker URL</b> просто вставьте скопированную ссылку. <b>Ничего дописывать в конец не нужно!</b> Приложение само подставит нужные параметры.</li>
+            <li>Пример: <code>https://script.google.com/macros/s/ВАШ_ИД/exec</code></li>
+            <li>Готово! Приложение начнет скачивать эмоуты через сервера Google.</li>
         </ol>
     </div>
 </body>

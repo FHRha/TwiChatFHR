@@ -26,6 +26,9 @@
     <sys:String x:Key="CircumventionMethodLabel">Circumvention Method</sys:String>
     <sys:String x:Key="ObsSourceUrlLabel">OBS Browser Source URL</sys:String>
     <sys:String x:Key="CopyLinkButton">Copy Link to Clipboard</sys:String>
+    <sys:String x:Key="CustomWorkerLabel">Custom Worker URL</sys:String>
+    <sys:String x:Key="HowToCreateWorkerBtn">How to create worker?</sys:String>
+    <sys:String x:Key="CustomWorkerHint">Local fallback proxy URL for 7TV (e.g. Google Apps Script)</sys:String>
 
     <sys:String x:Key="MethodDirect">Direct Connection</sys:String>
     <sys:String x:Key="MethodHttp">HTTP Proxy</sys:String>

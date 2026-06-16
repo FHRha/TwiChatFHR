@@ -140,12 +140,12 @@
                 </StackPanel>
 
                 <StackPanel Spacing="6">
-                    <Grid>
-                        <TextBlock Text="Custom Worker URL" FontWeight="SemiBold"/>
-                        <Button Content="How to create worker?" Click="OpenWorkerGuide_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#3B82F6" Padding="4,0" Cursor="Hand" FontSize="12"/>
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+                        <TextBlock Grid.Column="0" Text="{DynamicResource CustomWorkerLabel}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="{DynamicResource HowToCreateWorkerBtn}" Click="OpenWorkerGuide_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#3B82F6" Padding="4,0" Cursor="Hand" FontSize="12" VerticalAlignment="Center"/>
                     </Grid>
                     <TextBox Name="CustomWorkerTextBox" TextChanged="TextBox_TextChanged" Watermark="https://..."/>
-                    <TextBlock Text="Local fallback proxy URL for 7TV (e.g. Cloudflare Worker)" FontSize="11" Foreground="#94A3B8"/>
+                    <TextBlock Text="{DynamicResource CustomWorkerHint}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
                 </StackPanel>
 
                 <StackPanel Spacing="6">

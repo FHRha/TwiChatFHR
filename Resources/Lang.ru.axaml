@@ -25,7 +25,10 @@
     <sys:String x:Key="RestartRequiredHint">Требуется перезапуск приложения.</sys:String>
     <sys:String x:Key="CircumventionMethodLabel">Метод Обхода Блокировок</sys:String>
     <sys:String x:Key="ObsSourceUrlLabel">Ссылка для OBS (Browser Source)</sys:String>
-    <sys:String x:Key="CopyLinkButton">Скопировать Ссылку</sys:String>
+    <sys:String x:Key="CopyLinkButton">Скопировать ссылку в буфер обмена</sys:String>
+    <sys:String x:Key="CustomWorkerLabel">Ссылка на собственный прокси-скрипт (Custom Worker URL)</sys:String>
+    <sys:String x:Key="HowToCreateWorkerBtn">Как создать свой прокси?</sys:String>
+    <sys:String x:Key="CustomWorkerHint">Локальный fallback прокси для обхода блокировки 7TV (Google Apps Script)</sys:String>
 
     <sys:String x:Key="MethodDirect">Прямое подключение</sys:String>
     <sys:String x:Key="MethodHttp">HTTP Прокси</sys:String>
