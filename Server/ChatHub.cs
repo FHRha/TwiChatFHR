@@ -24,6 +24,7 @@ public class ChatHub
             ""Opacity"": {TwitchChatCore.Core.ConfigManager.Settings.GlassOpacity.ToString(System.Globalization.CultureInfo.InvariantCulture)},
             ""ShowStreamerEmotes"": {TwitchChatCore.Core.ConfigManager.Settings.ShowStreamerEmotes.ToString().ToLower()},
             ""ShowGlobalEmotes"": {TwitchChatCore.Core.ConfigManager.Settings.ShowGlobalEmotes.ToString().ToLower()},
+            ""ShowGlobal7TVEmotes"": {TwitchChatCore.Core.ConfigManager.Settings.ShowGlobal7TVEmotes.ToString().ToLower()},
             ""HideBackground"": {TwitchChatCore.Core.ConfigManager.Settings.HideBackground.ToString().ToLower()},
             ""HideBadges"": {TwitchChatCore.Core.ConfigManager.Settings.HideBadges.ToString().ToLower()},
             ""TextOutline"": {TwitchChatCore.Core.ConfigManager.Settings.TextOutline.ToString().ToLower()},

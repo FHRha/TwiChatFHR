@@ -52,4 +52,13 @@
     <sys:String x:Key="StatusStartingProxy">Starting local proxy...</sys:String>
     <sys:String x:Key="StatusProxyStarted">Proxy successfully started!</sys:String>
     <sys:String x:Key="StatusProxyDirect">Using direct connection</sys:String>
+    <sys:String x:Key="StatusSingboxError">Error running Sing-box.</sys:String>
+    
+    <sys:String x:Key="EmoteProgressWithErrors">7TV Emotes for {0} ({1}/{2}) [Errors: {3}]</sys:String>
+    <sys:String x:Key="EmoteProgressNormal">7TV Emotes for {0} ({1}/{2})</sys:String>
+    <sys:String x:Key="EmoteProgressCached">7TV Emotes for {0} (Cached)</sys:String>
+    <sys:String x:Key="EmoteProgressFailed">Failed: 7TV Emotes for {0}</sys:String>
+    <sys:String x:Key="EmoteStatusDone">Done</sys:String>
+    <sys:String x:Key="EmoteStatusError">Error</sys:String>
+    <sys:String x:Key="EmoteSpeed">{0:F1} em/s</sys:String>
 </ResourceDictionary>

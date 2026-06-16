@@ -48,6 +48,16 @@
     <sys:String x:Key="StatusManualAdded">Профиль добавлен вручную.</sys:String>
     <sys:String x:Key="StatusCoreDownloading">Загрузка sing-box (~15 МБ)...</sys:String>
     <sys:String x:Key="StatusCoreDownloaded">Ядро sing-box загружено успешно!</sys:String>
+    <sys:String x:Key="StatusSingboxError">Ошибка запуска Sing-box.</sys:String>
+    
+    <sys:String x:Key="EmoteProgressWithErrors">7TV Эмоуты для {0} ({1}/{2}) [Ошибок: {3}]</sys:String>
+    <sys:String x:Key="EmoteProgressNormal">7TV Эмоуты для {0} ({1}/{2})</sys:String>
+    <sys:String x:Key="EmoteProgressCached">7TV Эмоуты для {0} (Кэш)</sys:String>
+    <sys:String x:Key="EmoteProgressFailed">Ошибка: 7TV Эмоуты для {0}</sys:String>
+    <sys:String x:Key="EmoteStatusDone">Готово</sys:String>
+    <sys:String x:Key="EmoteStatusError">Ошибка</sys:String>
+    <sys:String x:Key="EmoteSpeed">{0:F1} эм/с</sys:String>
+    
     <sys:String x:Key="StatusCoreError">Ошибка загрузки: {0}</sys:String>
     <sys:String x:Key="StatusStartingProxy">Запуск локального прокси...</sys:String>
     <sys:String x:Key="StatusProxyStarted">Прокси успешно запущен!</sys:String>

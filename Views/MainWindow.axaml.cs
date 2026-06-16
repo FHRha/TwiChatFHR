@@ -44,10 +44,12 @@ public partial class MainWindow : Window
         if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
         else LangComboBox.SelectedIndex = 1;
 
-        if (App.LocalServer != null)
-        {
-            ObsUrlTextBox.Text = App.LocalServer.BaseUrl + "/index.html";
-        }
+        this.Loaded += (s, e) => {
+            if (App.LocalServer != null)
+            {
+                ObsUrlTextBox.Text = App.LocalServer.BaseUrl + "/index.html";
+            }
+        };
 
         EmoteManager.OnEmoteDownloadProgress += (channel, processed, successful, total, speed) =>
         {
@@ -66,12 +68,12 @@ public partial class MainWindow : Window
                         int failed = processed - successful;
                         if (failed > 0)
                         {
-                            EmoteProgressText.Text = $"7TV Emotes for {channel} ({successful}/{total}) [Errors: {failed}]";
+                            EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressWithErrors") as string ?? "7TV Emotes for {0} ({1}/{2}) [Errors: {3}]", channel, successful, total, failed);
                             EmoteProgressText.Foreground = Avalonia.Media.Brushes.Orange;
                         }
                         else
                         {
-                            EmoteProgressText.Text = $"7TV Emotes for {channel} ({successful}/{total})";
+                            EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressNormal") as string ?? "7TV Emotes for {0} ({1}/{2})", channel, successful, total);
                             EmoteProgressText.Foreground = Avalonia.Media.Brushes.LightGreen;
                         }
                     }
@@ -79,11 +81,11 @@ public partial class MainWindow : Window
                     {
                         EmoteProgressBar.Maximum = 100;
                         EmoteProgressBar.Value = 100;
-                        EmoteProgressText.Text = $"7TV Emotes for {channel} (Cached)";
+                        EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressCached") as string ?? "7TV Emotes for {0} (Cached)", channel);
                         EmoteProgressText.Foreground = Avalonia.Media.Brushes.LightGreen;
                     }
 
-                    EmoteSpeedText.Text = "Done";
+                    EmoteSpeedText.Text = Application.Current!.FindResource("EmoteStatusDone") as string ?? "Done";
                     await Task.Delay(2000);
                     EmoteSpeedText.Text = "";
                 }
@@ -92,8 +94,8 @@ public partial class MainWindow : Window
                     EmoteProgressText.Foreground = Avalonia.Media.Brushes.White;
                     EmoteProgressBar.Maximum = total;
                     EmoteProgressBar.Value = successful;
-                    EmoteProgressText.Text = $"7TV Emotes for {channel} ({successful}/{total})";
-                    EmoteSpeedText.Text = $"{speed:F1} em/s";
+                    EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressNormal") as string ?? "7TV Emotes for {0} ({1}/{2})", channel, successful, total);
+                    EmoteSpeedText.Text = string.Format(Application.Current!.FindResource("EmoteSpeed") as string ?? "{0:F1} em/s", speed);
                 }
             });
         };
@@ -103,11 +105,11 @@ public partial class MainWindow : Window
             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
                 EmoteProgressPanel.IsVisible = true;
-                EmoteProgressText.Text = $"Failed: 7TV Emotes for {channel}";
+                EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressFailed") as string ?? "Failed: 7TV Emotes for {0}", channel);
                 EmoteProgressText.Foreground = Avalonia.Media.Brushes.Red;
                 EmoteProgressBar.Foreground = Avalonia.Media.Brushes.Red;
                 EmoteProgressBar.Value = 100;
-                EmoteSpeedText.Text = "Error";
+                EmoteSpeedText.Text = Application.Current!.FindResource("EmoteStatusError") as string ?? "Error";
                 EmoteErrorText.Text = error;
                 EmoteErrorText.IsVisible = true;
                 RetryEmotesButton.IsVisible = true;

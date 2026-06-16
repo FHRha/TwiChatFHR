@@ -338,14 +338,14 @@ public class EmoteManager
             // Channel emotes take precedence
             if (_channelEmotes.TryGetValue(word, out var channelUrl))
             {
-                words[i] = $"<img class=\"chat-emote\" src=\"{channelUrl}\" alt=\"{word}\" />";
+                words[i] = $"<span class=\"emote-container channel-emote\" data-text=\"{word}\"><img class=\"emote\" src=\"{channelUrl}\" alt=\"{word}\" /></span>";
                 continue;
             }
 
             // Global emotes
             if (mode == Core.SevenTVMode.ChannelAndGlobal && _globalEmotes.TryGetValue(word, out var globalUrl))
             {
-                words[i] = $"<img class=\"chat-emote\" src=\"{globalUrl}\" alt=\"{word}\" />";
+                words[i] = $"<span class=\"emote-container global-7tv-emote\" data-text=\"{word}\"><img class=\"emote\" src=\"{globalUrl}\" alt=\"{word}\" /></span>";
             }
         }
 

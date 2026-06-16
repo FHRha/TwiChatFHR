@@ -63,7 +63,9 @@ public class TwitchIrcClient
             {
                 var t1 = _badgeManager.LoadGlobalBadgesAsync();
                 var t2 = _badgeManager.LoadChannelBadgesAsync(_channel);
-                var t3 = _emoteManager.LoadGlobalEmotesAsync();
+                var t3 = TwitchChatCore.Core.ConfigManager.Settings.ShowGlobal7TVEmotes 
+                            ? _emoteManager.LoadGlobalEmotesAsync() 
+                            : Task.CompletedTask;
                 await Task.WhenAll(t1, t2, t3);
             });
 
@@ -175,7 +177,10 @@ public class TwitchIrcClient
                         if (roomId != _currentRoomId)
                         {
                             _currentRoomId = roomId;
-                            _ = _emoteManager.LoadChannelEmotesAsync(_currentRoomId, _channel);
+                            if (TwitchChatCore.Core.ConfigManager.Settings.ShowStreamerEmotes)
+                            {
+                                _ = _emoteManager.LoadChannelEmotesAsync(_currentRoomId, _channel);
+                            }
                         }
                     }
                     if (tag.StartsWith("badges=") && tag.Length > 7)
