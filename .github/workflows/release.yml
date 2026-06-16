@@ -33,13 +33,13 @@ jobs:
           echo "VERSION=$tag" >> $env:GITHUB_ENV
 
       - name: Publish Project
-        run: dotnet publish TwitchChatCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:Version=${{ env.VERSION }} -o out
+        run: dotnet publish TwitchChatCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:Version=${{ env.VERSION }} -o out
 
       - name: Create Zip Archive
-        run: Compress-Archive -Path out\* -DestinationPath TwitchChatOverlay.zip
+        run: Compress-Archive -Path out\* -DestinationPath TwiChatFHR.zip
 
       - name: Upload Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload ${{ github.event.release.tag_name || 'latest' }} TwitchChatOverlay.zip --clobber
+          gh release upload ${{ github.event.release.tag_name || 'latest' }} TwiChatFHR.zip --clobber

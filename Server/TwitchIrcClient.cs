@@ -157,6 +157,7 @@ public class TwitchIrcClient
             string displayName = "";
             string text = "";
             string messageId = "";
+            string role = "none";
             var badgeUrls = new System.Collections.Generic.List<string>();
             var twitchEmotes = new System.Collections.Generic.List<(int Start, int End, string Id)>();
 
@@ -186,6 +187,10 @@ public class TwitchIrcClient
                     if (tag.StartsWith("badges=") && tag.Length > 7)
                     {
                         var badgesStr = tag.Substring(7);
+                        if (badgesStr.Contains("broadcaster/")) role = "broadcaster";
+                        else if (badgesStr.Contains("moderator/")) role = "mod";
+                        else if (badgesStr.Contains("vip/")) role = "vip";
+
                         var badgesList = badgesStr.Split(',');
                         foreach (var b in badgesList)
                         {
@@ -302,7 +307,8 @@ public class TwitchIrcClient
                 Color = color,
                 Text = text,
                 TextHtml = htmlText,
-                Badges = badgeUrls
+                Badges = badgeUrls,
+                Role = role
             };
 
             var json = JsonSerializer.Serialize(chatMessage);

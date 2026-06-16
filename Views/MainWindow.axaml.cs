@@ -30,12 +30,13 @@ public partial class MainWindow : Window
         Global7TVEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobal7TVEmotes;
         HideBackgroundCheck.IsChecked = ConfigManager.Settings.HideBackground;
         HideBadgesCheck.IsChecked = ConfigManager.Settings.HideBadges;
+        EnableRoleColorsCheck.IsChecked = ConfigManager.Settings.EnableRoleColors;
         TextOutlineCheck.IsChecked = ConfigManager.Settings.TextOutline;
 
-        if (Color.TryParse(ConfigManager.Settings.CustomTextColor, out var parsedColor))
-        {
-            TextColorPicker.Color = parsedColor;
-        }
+        if (Color.TryParse(ConfigManager.Settings.CustomTextColor, out var c1)) TextColorPicker.Color = c1;
+        if (Color.TryParse(ConfigManager.Settings.ColorBroadcaster, out var c2)) BroadcasterColorPicker.Color = c2;
+        if (Color.TryParse(ConfigManager.Settings.ColorMod, out var c3)) ModColorPicker.Color = c3;
+        if (Color.TryParse(ConfigManager.Settings.ColorVip, out var c4)) VipColorPicker.Color = c4;
 
         UsernameTextBox.Text = ConfigManager.Settings.TwitchChannel;
         ServerPortTextBox.Text = ConfigManager.Settings.ServerPort.ToString();
@@ -106,9 +107,8 @@ public partial class MainWindow : Window
             {
                 EmoteProgressPanel.IsVisible = true;
                 EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressFailed") as string ?? "Failed: 7TV Emotes for {0}", channel);
-                EmoteProgressText.Foreground = Avalonia.Media.Brushes.Red;
+                EmoteProgressText.Foreground = Avalonia.Media.Brushes.LightCoral;
                 EmoteProgressBar.Foreground = Avalonia.Media.Brushes.Red;
-                EmoteProgressBar.Value = 100;
                 EmoteSpeedText.Text = Application.Current!.FindResource("EmoteStatusError") as string ?? "Error";
                 EmoteErrorText.Text = error;
                 EmoteErrorText.IsVisible = true;
@@ -158,11 +158,18 @@ public partial class MainWindow : Window
         ConfigManager.Settings.ShowGlobal7TVEmotes = Global7TVEmotesCheck.IsChecked ?? false;
         ConfigManager.Settings.HideBackground = HideBackgroundCheck.IsChecked ?? false;
         ConfigManager.Settings.HideBadges = HideBadgesCheck.IsChecked ?? false;
+        ConfigManager.Settings.EnableRoleColors = EnableRoleColorsCheck.IsChecked ?? true;
         ConfigManager.Settings.TextOutline = TextOutlineCheck.IsChecked ?? false;
         
         // Save Hex color, ignoring alpha channel for CSS (e.g., #RRGGBB)
-        var color = TextColorPicker.Color;
-        ConfigManager.Settings.CustomTextColor = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        var cText = TextColorPicker.Color;
+        ConfigManager.Settings.CustomTextColor = $"#{cText.R:X2}{cText.G:X2}{cText.B:X2}";
+        var cBrd = BroadcasterColorPicker.Color;
+        ConfigManager.Settings.ColorBroadcaster = $"#{cBrd.R:X2}{cBrd.G:X2}{cBrd.B:X2}";
+        var cMod = ModColorPicker.Color;
+        ConfigManager.Settings.ColorMod = $"#{cMod.R:X2}{cMod.G:X2}{cMod.B:X2}";
+        var cVip = VipColorPicker.Color;
+        ConfigManager.Settings.ColorVip = $"#{cVip.R:X2}{cVip.G:X2}{cVip.B:X2}";
         
         ConfigManager.Save();
         BroadcastDesignUpdate();
@@ -185,8 +192,12 @@ public partial class MainWindow : Window
                     ""ShowGlobal7TVEmotes"": {ConfigManager.Settings.ShowGlobal7TVEmotes.ToString().ToLower()},
                     ""HideBackground"": {ConfigManager.Settings.HideBackground.ToString().ToLower()},
                     ""HideBadges"": {ConfigManager.Settings.HideBadges.ToString().ToLower()},
+                    ""EnableRoleColors"": {ConfigManager.Settings.EnableRoleColors.ToString().ToLower()},
                     ""TextOutline"": {ConfigManager.Settings.TextOutline.ToString().ToLower()},
-                    ""TextColor"": ""{ConfigManager.Settings.CustomTextColor}""
+                    ""TextColor"": ""{ConfigManager.Settings.CustomTextColor}"",
+                    ""ColorBroadcaster"": ""{ConfigManager.Settings.ColorBroadcaster}"",
+                    ""ColorMod"": ""{ConfigManager.Settings.ColorMod}"",
+                    ""ColorVip"": ""{ConfigManager.Settings.ColorVip}""
                 }}";
                 _ = chatHub.BroadcastMessageAsync(json);
             }

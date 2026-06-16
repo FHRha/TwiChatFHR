@@ -27,8 +27,12 @@ public class ChatHub
             ""ShowGlobal7TVEmotes"": {TwitchChatCore.Core.ConfigManager.Settings.ShowGlobal7TVEmotes.ToString().ToLower()},
             ""HideBackground"": {TwitchChatCore.Core.ConfigManager.Settings.HideBackground.ToString().ToLower()},
             ""HideBadges"": {TwitchChatCore.Core.ConfigManager.Settings.HideBadges.ToString().ToLower()},
+            ""EnableRoleColors"": {TwitchChatCore.Core.ConfigManager.Settings.EnableRoleColors.ToString().ToLower()},
             ""TextOutline"": {TwitchChatCore.Core.ConfigManager.Settings.TextOutline.ToString().ToLower()},
-            ""TextColor"": ""{TwitchChatCore.Core.ConfigManager.Settings.CustomTextColor}""
+            ""TextColor"": ""{TwitchChatCore.Core.ConfigManager.Settings.CustomTextColor}"",
+            ""ColorBroadcaster"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorBroadcaster}"",
+            ""ColorMod"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorMod}"",
+            ""ColorVip"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorVip}""
         }}";
         var configBytes = Encoding.UTF8.GetBytes(initialConfig);
         await webSocket.SendAsync(new ArraySegment<byte>(configBytes), WebSocketMessageType.Text, true, CancellationToken.None);

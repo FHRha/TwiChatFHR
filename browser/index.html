@@ -16,6 +16,9 @@
             --shadow-inner: inset 0 2px 5px rgba(255, 255, 255, 0.15);
             --shadow-outer: 0 4px 12px rgba(0, 0, 0, 0.2);
             --text-color: #FFFFFF;
+            --color-broadcaster: #F59E0B;
+            --color-mod: #10B981;
+            --color-vip: #EC4899;
         }
 
         body {
@@ -83,6 +86,8 @@
             font-weight: 400;
             color: var(--text-color);
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         /* --- Toggleable Features --- */
@@ -114,6 +119,52 @@
         .hide-channel-emotes .channel-emote::before { content: attr(data-text); font-weight: inherit; }
 
         /* -------------------------- */
+        
+        /* Roles Styling */
+        @keyframes gradientShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body:not(.disable-role-colors) .chat-message.role-broadcaster {
+            border-color: var(--color-broadcaster);
+            box-shadow: 0 0 10px var(--color-broadcaster), var(--shadow-inner), var(--shadow-outer);
+        }
+        body:not(.disable-role-colors) .chat-message.role-broadcaster .username {
+            background: linear-gradient(135deg, var(--color-broadcaster) 0%, #FFFFFF 50%, var(--color-broadcaster) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 1px 3px rgba(0,0,0,0.8));
+            animation: gradientShimmer 3s ease infinite;
+        }
+
+        body:not(.disable-role-colors) .chat-message.role-mod {
+            border-color: var(--color-mod);
+            box-shadow: 0 0 10px var(--color-mod), var(--shadow-inner), var(--shadow-outer);
+        }
+        body:not(.disable-role-colors) .chat-message.role-mod .username {
+            background: linear-gradient(135deg, var(--color-mod) 0%, #FFFFFF 50%, var(--color-mod) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 1px 3px rgba(0,0,0,0.8));
+            animation: gradientShimmer 3s ease infinite;
+        }
+
+        body:not(.disable-role-colors) .chat-message.role-vip {
+            border-color: var(--color-vip);
+            box-shadow: 0 0 10px var(--color-vip), var(--shadow-inner), var(--shadow-outer);
+        }
+        body:not(.disable-role-colors) .chat-message.role-vip .username {
+            background: linear-gradient(135deg, var(--color-vip) 0%, #FFFFFF 50%, var(--color-vip) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0px 1px 3px rgba(0,0,0,0.8));
+            animation: gradientShimmer 3s ease infinite;
+        }
 
         .chat-badge {
             height: 1.2em;

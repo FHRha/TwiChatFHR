@@ -24,6 +24,9 @@ function addMessage(data) {
     msgElement.className = 'chat-message';
     if (data.Id) msgElement.dataset.id = data.Id;
     if (data.Username) msgElement.dataset.username = data.Username;
+    if (data.Role && data.Role !== 'none') {
+        msgElement.classList.add(`role-${data.Role}`);
+    }
     
     let badgesHtml = '';
     if (data.Badges && data.Badges.length > 0) {
@@ -83,9 +86,13 @@ function connect() {
                 if (data.Spacing !== undefined) root.style.setProperty('--msg-spacing', data.Spacing + 'px');
                 if (data.Opacity !== undefined) root.style.setProperty('--glass-opacity', data.Opacity);
                 if (data.TextColor !== undefined) root.style.setProperty('--text-color', data.TextColor);
+                if (data.ColorBroadcaster !== undefined) root.style.setProperty('--color-broadcaster', data.ColorBroadcaster);
+                if (data.ColorMod !== undefined) root.style.setProperty('--color-mod', data.ColorMod);
+                if (data.ColorVip !== undefined) root.style.setProperty('--color-vip', data.ColorVip);
                 
                 if (data.HideBackground !== undefined) body.classList.toggle('hide-background', data.HideBackground);
                 if (data.HideBadges !== undefined) body.classList.toggle('hide-badges', data.HideBadges);
+                if (data.EnableRoleColors !== undefined) body.classList.toggle('disable-role-colors', !data.EnableRoleColors);
                 if (data.TextOutline !== undefined) body.classList.toggle('text-outline', data.TextOutline);
                 
                 if (data.ShowStreamerEmotes !== undefined) {

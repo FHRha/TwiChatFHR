@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
         x:Class="TwitchChatCore.Views.MainWindow"
         Title="{DynamicResource MainWindowTitle}"
-        Width="1000" Height="650"
+        Width="1150" Height="750" MinWidth="800" MinHeight="500"
         Background="#0F172A"
         ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen">
@@ -18,17 +18,17 @@
             <Border Grid.Column="0" Background="#1E293B" CornerRadius="0,16,16,0" Padding="24,24,4,24">
                 <Grid RowDefinitions="Auto, *">
                     <!-- Emotes Download Progress -->
-                    <Border Grid.Row="0" Name="EmoteProgressPanel" Background="#D01E293B" Padding="16,12" CornerRadius="8" Margin="0,0,20,16" IsVisible="False" BorderBrush="#334155" BorderThickness="1">
-                        <StackPanel Spacing="6">
-                            <Grid>
-                                <TextBlock Name="EmoteProgressText" Text="Downloading 7TV Emotes" Foreground="#E2E8F0" FontSize="13" FontWeight="SemiBold" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <Border Grid.Row="0" Name="EmoteProgressPanel" Background="#1E293B" Padding="16" CornerRadius="12" Margin="0,0,20,16" IsVisible="False" BorderBrush="#334155" BorderThickness="1" BoxShadow="0 4 6 0 #30000000">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Name="EmoteProgressText" Grid.Column="0" Text="Downloading 7TV Emotes" Foreground="#E2E8F0" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <TextBlock Name="EmoteSpeedText" Text="0.0 em/s" Foreground="#94A3B8" FontSize="12" VerticalAlignment="Center" />
-                                    <Button Name="RetryEmotesButton" Content="Retry" Click="RetryEmotes_Click" IsVisible="False" Padding="8,2" FontSize="11" Background="#334155" Foreground="#E2E8F0" CornerRadius="4" VerticalAlignment="Center" Cursor="Hand"/>
+                                    <Button Name="RetryEmotesButton" Content="Retry" Click="RetryEmotes_Click" IsVisible="False" Padding="12,6" FontSize="12" FontWeight="Bold" Background="#EF4444" Foreground="#FFFFFF" CornerRadius="6" VerticalAlignment="Center" Cursor="Hand"/>
                                 </StackPanel>
                             </Grid>
-                            <ProgressBar Name="EmoteProgressBar" Minimum="0" Maximum="100" Value="0" Height="6" CornerRadius="3" Foreground="#3B82F6" Background="#334155" />
-                            <TextBlock Name="EmoteErrorText" Text="" Foreground="#EF4444" FontSize="11" TextWrapping="Wrap" IsVisible="False" Margin="0,4,0,0"/>
+                            <ProgressBar Name="EmoteProgressBar" Minimum="0" Maximum="100" Value="0" Height="8" CornerRadius="4" Foreground="#3B82F6" Background="#0F172A" />
+                            <TextBlock Name="EmoteErrorText" Text="" Foreground="#F87171" FontSize="12" TextWrapping="Wrap" IsVisible="False"/>
                         </StackPanel>
                     </Border>
 
@@ -36,7 +36,9 @@
                         <StackPanel Spacing="16" Margin="0,0,20,0">
                             <Grid>
                                 <TextBlock Text="{DynamicResource DesignStudio}" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF" />
-                                <Button Content="⚙️" HorizontalAlignment="Right" Background="Transparent" Foreground="#94A3B8" Click="OpenSettings_Click" Padding="8,4" />
+                                <Button HorizontalAlignment="Right" Background="Transparent" Foreground="#94A3B8" Click="OpenSettings_Click" Padding="8,4" Cursor="Hand">
+                                    <PathIcon Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" Width="20" Height="20" Foreground="#94A3B8"/>
+                                </Button>
                             </Grid>
                             
                             <StackPanel Spacing="6" Margin="0,10,0,0">
@@ -64,24 +66,38 @@
                             </StackPanel>
 
                             <StackPanel Spacing="6">
-                                <TextBlock Text="{DynamicResource TextColorLabel}" FontWeight="SemiBold"/>
-                                <ColorPicker Name="TextColorPicker" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Left" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                <TextBlock Text="{DynamicResource ColorTitleLabel}" FontWeight="SemiBold"/>
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto">
+                                    <StackPanel Grid.Column="0" Margin="0,0,14,0" Spacing="4">
+                                        <TextBlock Text="{DynamicResource TextColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        <ColorPicker Name="TextColorPicker" ToolTip.Tip="Text Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,14,0" Spacing="4">
+                                        <TextBlock Text="{DynamicResource ColorBroadcasterLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        <ColorPicker Name="BroadcasterColorPicker" ToolTip.Tip="Broadcaster Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="0,0,14,0" Spacing="4">
+                                        <TextBlock Text="{DynamicResource ColorModLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        <ColorPicker Name="ModColorPicker" ToolTip.Tip="Moderator Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" Spacing="4">
+                                        <TextBlock Text="{DynamicResource ColorVipLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        <ColorPicker Name="VipColorPicker" ToolTip.Tip="VIP Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    </StackPanel>
+                                </Grid>
                             </StackPanel>
 
                             <Separator Background="#334155" Margin="0,5" Height="1"/>
 
-                            <Grid ColumnDefinitions="*,*">
-                                <StackPanel Grid.Column="0" Spacing="8">
-                                    <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                    <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                    <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                    <CheckBox Name="TextOutlineCheck" Content="{DynamicResource TextOutlineCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="8">
-                                    <CheckBox Name="HideBackgroundCheck" Content="{DynamicResource HideBackgroundCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                    <CheckBox Name="HideBadgesCheck" Content="{DynamicResource HideBadgesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                </StackPanel>
-                            </Grid>
+                            <StackPanel Spacing="8">
+                                <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
+                                <CheckBox Name="HideBackgroundCheck" Content="{DynamicResource HideBackgroundCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="HideBadgesCheck" Content="{DynamicResource HideBadgesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="EnableRoleColorsCheck" Content="{DynamicResource EnableRoleColorsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="TextOutlineCheck" Content="{DynamicResource TextOutlineCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                            </StackPanel>
 
                             <Separator Background="#334155" Margin="0,5" Height="1"/>
 
@@ -112,13 +128,14 @@
         <!-- Settings Modal Card -->
         <Border Name="SettingsModal" IsVisible="False" ZIndex="11" Background="#1E293B" Padding="32" 
                 CornerRadius="16" BoxShadow="0 20 40 0 #A0000000"
-                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,40" Width="450" MaxHeight="550">
-            <ScrollViewer>
-            <StackPanel Spacing="16" Margin="0,0,10,0">
-                <Grid>
-                    <TextBlock Text="{DynamicResource TechnicalSettingsTitle}" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" />
-                    <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" Foreground="#64748B" Click="CloseSettings_Click" Padding="8,4" />
+                HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="0,40,0,40" Width="450">
+            <Grid RowDefinitions="Auto, *">
+                <Grid Grid.Row="0" Margin="0,0,10,16">
+                    <TextBlock Text="{DynamicResource TechnicalSettingsTitle}" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                    <Button Content="✕" HorizontalAlignment="Right" Background="#334155" Foreground="#F87171" Click="CloseSettings_Click" Padding="12,8" CornerRadius="8" FontSize="16" FontWeight="Bold" Cursor="Hand" />
                 </Grid>
+                <ScrollViewer Grid.Row="1">
+                <StackPanel Spacing="16" Margin="0,0,10,0">
 
                 <StackPanel Spacing="6">
                     <TextBlock Text="{DynamicResource AppLanguageLabel}" FontWeight="SemiBold"/>
@@ -153,10 +170,10 @@
                     <TextBox Name="ObsUrlTextBox" IsReadOnly="True" />
                     <Button Content="{DynamicResource CopyLinkButton}" Click="CopyUrl_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
                 </StackPanel>
-            </StackPanel>
-            </ScrollViewer>
+                </StackPanel>
+                </ScrollViewer>
+            </Grid>
         </Border>
 
     </Grid>
 </Window>
-

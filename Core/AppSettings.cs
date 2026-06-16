@@ -32,7 +32,11 @@ public class AppSettings
     public bool HideBackground { get; set; } = false;
     public bool HideBadges { get; set; } = false;
     public bool TextOutline { get; set; } = false;
+    public bool EnableRoleColors { get; set; } = true;
     
     public string CustomTextColor { get; set; } = "#FFFFFF";
+    public string ColorBroadcaster { get; set; } = "#F59E0B";
+    public string ColorMod { get; set; } = "#10B981";
+    public string ColorVip { get; set; } = "#EC4899";
     public string Language { get; set; } = "ru";
 }

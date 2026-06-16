@@ -7,12 +7,17 @@
     <sys:String x:Key="MessageSpacingLabel">Message Spacing</sys:String>
     <sys:String x:Key="GlassOpacityLabel">Glass Opacity</sys:String>
     <sys:String x:Key="TextColorLabel">Text Color</sys:String>
+    <sys:String x:Key="ColorTitleLabel">Text &amp; Role Colors</sys:String>
+    <sys:String x:Key="ColorBroadcasterLabel">Streamer</sys:String>
+    <sys:String x:Key="ColorModLabel">Mod</sys:String>
+    <sys:String x:Key="ColorVipLabel">VIP</sys:String>
     <sys:String x:Key="StreamerEmotesCheck">Streamer Emotes</sys:String>
     <sys:String x:Key="GlobalEmotesCheck">Twitch Emotes</sys:String>
     <sys:String x:Key="Global7TVEmotesCheck">Global 7TV Emotes</sys:String>
     <sys:String x:Key="TextOutlineCheck">Text Shadow</sys:String>
     <sys:String x:Key="HideBackgroundCheck">Hide Background</sys:String>
     <sys:String x:Key="HideBadgesCheck">Hide Badges</sys:String>
+    <sys:String x:Key="EnableRoleColorsCheck">Highlight Roles (Mod/VIP)</sys:String>
     <sys:String x:Key="DesignHintText">Drag sliders to see real-time updates in the preview and on your stream.</sys:String>
     
     <sys:String x:Key="LivePreviewTitle">Live Preview</sys:String>

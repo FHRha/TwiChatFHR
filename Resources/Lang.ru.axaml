@@ -7,12 +7,17 @@
     <sys:String x:Key="MessageSpacingLabel">Расстояние (Spacing)</sys:String>
     <sys:String x:Key="GlassOpacityLabel">Прозрачность Фона</sys:String>
     <sys:String x:Key="TextColorLabel">Цвет Текста</sys:String>
+    <sys:String x:Key="ColorTitleLabel">Цвета Текста и Ролей</sys:String>
+    <sys:String x:Key="ColorBroadcasterLabel">Стример</sys:String>
+    <sys:String x:Key="ColorModLabel">Модер</sys:String>
+    <sys:String x:Key="ColorVipLabel">VIP</sys:String>
     <sys:String x:Key="StreamerEmotesCheck">Эмоуты Стримера</sys:String>
     <sys:String x:Key="GlobalEmotesCheck">Твич Эмоуты</sys:String>
     <sys:String x:Key="Global7TVEmotesCheck">Глобальные Эмоуты 7TV</sys:String>
     <sys:String x:Key="TextOutlineCheck">Тень у текста</sys:String>
     <sys:String x:Key="HideBackgroundCheck">Скрыть задний фон</sys:String>
     <sys:String x:Key="HideBadgesCheck">Скрыть Значки (Badges)</sys:String>
+    <sys:String x:Key="EnableRoleColorsCheck">Выделять роли (Модер/VIP)</sys:String>
     <sys:String x:Key="DesignHintText">Перетаскивайте ползунки, чтобы увидеть изменения в реальном времени.</sys:String>
     
     <sys:String x:Key="LivePreviewTitle">Предпросмотр</sys:String>
