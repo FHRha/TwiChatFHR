@@ -20,8 +20,20 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Extract Version
+        id: get_version
+        run: |
+          $tag = "${{ github.event.release.tag_name }}"
+          if ($tag.StartsWith("v") -or $tag.StartsWith("V")) {
+              $tag = $tag.Substring(1)
+          }
+          if ([string]::IsNullOrWhiteSpace($tag)) {
+              $tag = "1.0.0"
+          }
+          echo "VERSION=$tag" >> $env:GITHUB_ENV
+
       - name: Publish Project
-        run: dotnet publish TwitchChatCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out
+        run: dotnet publish TwitchChatCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:Version=${{ env.VERSION }} -o out
 
       - name: Create Zip Archive
         run: Compress-Archive -Path out\* -DestinationPath TwitchChatOverlay.zip
