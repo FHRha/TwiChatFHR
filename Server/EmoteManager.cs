@@ -16,7 +16,7 @@ public class EmoteManager
     private readonly ConcurrentDictionary<string, string> _channelEmotes = new(StringComparer.Ordinal);
     
     // Limits concurrent downloads so we don't spam 7TV CDN or kill the proxy
-    private readonly SemaphoreSlim _downloadSemaphore = new(4, 4);
+    private readonly SemaphoreSlim _downloadSemaphore = new(24, 24);
 
     public EmoteManager()
     {
@@ -173,10 +173,43 @@ public class EmoteManager
                     if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(urlBase))
                     {
                         if (urlBase.StartsWith("//")) urlBase = "https:" + urlBase;
-                        var imgUrl = $"{urlBase}/1x.webp";
+                        bool isAnimated = false;
+                        if (data.TryGetProperty("animated", out var animElement) && animElement.ValueKind == JsonValueKind.True)
+                        {
+                            isAnimated = true;
+                        }
+
+                        string fileName = "1x.webp";
+                        string extension = ".webp";
+                        
+                        if (host.TryGetProperty("files", out var filesElement) && filesElement.ValueKind == JsonValueKind.Array)
+                        {
+                            string? webpName = null, gifName = null, pngName = null;
+                            foreach (var file in filesElement.EnumerateArray())
+                            {
+                                if (file.TryGetProperty("name", out var nameProp))
+                                {
+                                    var fName = nameProp.GetString();
+                                    if (fName != null && fName.StartsWith("1x."))
+                                    {
+                                        if (fName.EndsWith(".webp")) webpName = fName;
+                                        else if (fName.EndsWith(".gif")) gifName = fName;
+                                        else if (fName.EndsWith(".png")) pngName = fName;
+                                    }
+                                }
+                            }
+                            
+                            if (isAnimated && gifName != null) { fileName = gifName; extension = ".gif"; }
+                            else if (!isAnimated && pngName != null && webpName == null) { fileName = pngName; extension = ".png"; }
+                            else if (webpName != null) { fileName = webpName; extension = ".webp"; }
+                            else if (gifName != null) { fileName = gifName; extension = ".gif"; }
+                            else if (pngName != null) { fileName = pngName; extension = ".png"; }
+                        }
+
+                        var imgUrl = $"{urlBase}/{fileName}";
                         var emoteId = data.GetProperty("id").GetString() ?? Guid.NewGuid().ToString();
                         
-                        var localFileName = $"{emoteId}.webp";
+                        var localFileName = $"{emoteId}{extension}";
                         var localFilePath = Path.Combine(emotesDir, localFileName);
                         var routeUrl = $"/cache/emotes/{folderName}/{localFileName}";
 

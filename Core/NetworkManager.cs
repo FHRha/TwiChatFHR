@@ -8,7 +8,12 @@ namespace TwitchChatCore.Core;
 
 public static class NetworkManager
 {
-    private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly HttpClient _httpClient = new HttpClient(new SocketsHttpHandler 
+    { 
+        AutomaticDecompression = System.Net.DecompressionMethods.All,
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+    }) 
+    { Timeout = TimeSpan.FromSeconds(15) };
     private static List<string> _apiMirrors = new() { "https://7tv.io", "https://api.7tv.app" };
     private static List<string> _cdnMirrors = new() { "https://cdn.7tv.app", "https://cdn.zerotv.app" };
     private static bool _mirrorsLoaded = false;
