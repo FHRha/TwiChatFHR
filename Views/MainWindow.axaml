@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:v="using:TwitchChatCore.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="TwitchChatCore.Views.MainWindow"
+        Title="Twitch Chat Settings Wizard"
+        Width="900" Height="600"
+        Background="#1E1E1E">
+
+    <Window.Styles>
+        <!-- Adding local namespace locally inside the file just for the preview control if needed, but standard Avalonia handles it via xmlns:local -->
+    </Window.Styles>
+    <Grid ColumnDefinitions="300, *">
+        <!-- Settings Panel -->
+        <StackPanel Grid.Column="0" Margin="10" Spacing="10">
+            <TextBlock Text="Settings Wizard" FontSize="20" FontWeight="Bold" Foreground="White"/>
+            
+            <TextBlock Text="Twitch Username:" Foreground="White"/>
+            <TextBox Name="UsernameTextBox" Text="" TextChanged="TextBox_TextChanged" />
+
+            <TextBlock Text="Server Port (0 for auto, requires restart):" Foreground="White"/>
+            <TextBox Name="ServerPortTextBox" Text="0" TextChanged="TextBox_TextChanged" />
+
+            <TextBlock Text="Circumvention Method:" Foreground="White"/>
+            <ComboBox Name="MethodComboBox" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="ComboBox_SelectionChanged">
+                <ComboBoxItem>Direct Connection</ComboBoxItem>
+                <ComboBoxItem>HTTP Proxy</ComboBoxItem>
+                <ComboBoxItem>Socks5</ComboBoxItem>
+            </ComboBox>
+
+            <TextBlock Text="OBS Browser Source URL:" Foreground="White" Margin="0,20,0,0"/>
+            <TextBox Name="ObsUrlTextBox" IsReadOnly="True" />
+            <Button Content="Copy URL" Click="CopyUrl_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+
+        </StackPanel>
+
+        <!-- Live Preview Panel (WebView2) -->
+        <Border Grid.Column="1" Background="Black" BorderBrush="#333" BorderThickness="1,0,0,0">
+            <Grid>
+                <TextBlock Text="Live Preview" Foreground="#555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <v:PreviewWebView />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

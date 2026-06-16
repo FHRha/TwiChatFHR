@@ -1,0 +1,46 @@
+# .NET / C#
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+*.user
+*.suo
+*.userprefs
+*.dbmdl
+*.jfm
+*.pbc
+*.vspscc
+*.vssscc
+*.builds
+*.pidb
+*.svclog
+*.scc
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / Rider
+.vs/
+.idea/
+.vscode/
+
+# Project Specific
+# Ignore the cache folder where downloaded emotes and badges are stored
+cache/
+
+# Ignore build artifacts and output
+out/
+TwitchChatOverlay.zip
+artifact/
+artifacts/
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

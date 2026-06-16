@@ -1,0 +1,32 @@
+name: Update Global Badges
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Run every Sunday at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-badges:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download latest global badges
+        run: |
+          mkdir -p Server/Resources
+          # Note: api.ivr.fi is the only reliable public proxy for Twitch's internal GraphQL badge API.
+          # It contains the complete set of official Twitch badges (including new ones like USA flag).
+          # Other APIs like FrankerFaceZ or BetterTTV use incompatible schemas and are not sent in IRC tags.
+          curl -s https://api.ivr.fi/v2/twitch/badges/global -o Server/Resources/global_badges.json
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add Server/Resources/global_badges.json
+          git commit -m "chore: update global badges from IVR API" || echo "No changes to commit"
+          git push
