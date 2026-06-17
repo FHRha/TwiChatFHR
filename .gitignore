@@ -22,6 +22,9 @@
 .idea/
 .vscode/
 
+# Plans
+plans.md
+
 # Project Specific
 # Ignore the cache folder where downloaded emotes and badges are stored
 cache/
