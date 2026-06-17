@@ -12,11 +12,23 @@
     <sys:String x:Key="ColorBroadcasterLabel">Стример</sys:String>
     <sys:String x:Key="ColorModLabel">Модер</sys:String>
     <sys:String x:Key="ColorVipLabel">VIP</sys:String>
-    <sys:String x:Key="StreamerEmotesCheck">Эмоуты Стримера</sys:String>
+    <sys:String x:Key="StreamerEmotesCheck">7TV эмоуты</sys:String>
     <sys:String x:Key="GlobalEmotesCheck">Твич Эмоуты</sys:String>
     <sys:String x:Key="Global7TVEmotesCheck">Глобальные Эмоуты 7TV</sys:String>
     <sys:String x:Key="TextOutlineCheck">Тень у текста</sys:String>
     <sys:String x:Key="HideBackgroundCheck">Скрыть задний фон</sys:String>
+    <sys:String x:Key="EditBlacklistLabel">Чёрный список (Blacklist)</sys:String>
+    <sys:String x:Key="EditBanPhrasesLabel">Настройка фраз для автобана</sys:String>
+    <sys:String x:Key="CheckForUpdatesLabel">Проверить обновления</sys:String>
+    <sys:String x:Key="EnableJokeScriptCheck">Активировать скрипт по отлову школьников</sys:String>
+    <sys:String x:Key="JokeScriptDescription">Автоматически добавляет в чёрный список пользователей, написавших определённые фразы (настраивается в ban_phrases.txt)</sys:String>
+    <sys:String x:Key="TestModeActiveLabel">ТЕСТОВЫЙ РЕЖИМ</sys:String>
+    <sys:String x:Key="SimulationSpeedLabel">Скорость симуляции (мс):</sys:String>
+    <sys:String x:Key="MinimizeToTrayCheck">Сворачивать в трей при закрытии</sys:String>
+    <sys:String x:Key="TrayOpen">Открыть приложение</sys:String>
+    <sys:String x:Key="TrayCopyLink">Скопировать ссылку OBS</sys:String>
+    <sys:String x:Key="TrayExit">Закрыть приложение</sys:String>
+    <sys:String x:Key="CategoryStreamerEmotes">7TV эмоуты</sys:String>
     <sys:String x:Key="HideBadgesCheck">Скрыть Значки (Badges)</sys:String>
     <sys:String x:Key="EnableRoleColorsCheck">Выделять роли (Модер/VIP)</sys:String>
     <sys:String x:Key="CategoryMain">Главные настройки</sys:String>
@@ -64,6 +76,18 @@
     <sys:String x:Key="EnableGroupingCheck">Группировать сообщения подряд</sys:String>
     <sys:String x:Key="HighlightMentionsCheck">Подсвечивать упоминание стримера</sys:String>
     <sys:String x:Key="HighlightFirstMessageCheck">Выделять первое сообщение</sys:String>
+    
+    <sys:String x:Key="CategoryEmotes">Эмоуты</sys:String>
+    <sys:String x:Key="ShowBTTVEmotesCheck">BetterTTV эмоуты</sys:String>
+    <sys:String x:Key="ShowFFZEmotesCheck">FrankerFaceZ эмоуты</sys:String>
+    
+    <sys:String x:Key="CategoryCommands">Команды чата</sys:String>
+    <sys:String x:Key="EnableChatEffectsCheck">Анимации текста (p!, s!)</sys:String>
+    <sys:String x:Key="ChatEffectsHint">Позволяет зрителям использовать префиксы 'p! ' (радуга) и 's! ' (тряска) для анимации сообщений.</sys:String>
+
+    <sys:String x:Key="HideBotMessagesCheck">Скрывать сообщения ботов</sys:String>
+    <sys:String x:Key="HideModMessagesCheck">Скрывать сообщения модераторов</sys:String>
+    <sys:String x:Key="HideVipMessagesCheck">Скрывать сообщения VIP</sys:String>
 
     <sys:String x:Key="DesignHintText">Перетаскивайте ползунки, чтобы увидеть изменения в реальном времени.</sys:String>
     

@@ -12,8 +12,8 @@ namespace TwitchChatCore.Server;
 public class EmoteManager
 {
     private readonly HttpClient _httpClient;
-    private readonly ConcurrentDictionary<string, string> _globalEmotes = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<string, string> _channelEmotes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, string> _globalEmotes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, string> _channelEmotes = new(StringComparer.OrdinalIgnoreCase);
     
     // Limits concurrent downloads so we don't spam 7TV CDN or kill the proxy
     private readonly SemaphoreSlim _downloadSemaphore = new(24, 24);
@@ -113,7 +113,7 @@ public class EmoteManager
                 {
                     var json = await File.ReadAllTextAsync(cacheFile);
                     _channelEmotes.Clear();
-                    await ParseAndDownloadEmotesAsync(json, _channelEmotes, channelName);
+                    await ParseAndDownloadEmotesAsync(json, _channelEmotes, $"{channelName}/7tv");
                     loadedFromCache = true;
                     Console.WriteLine($"Loaded {_channelEmotes.Count} channel emotes from cache.");
                 }
@@ -137,7 +137,7 @@ public class EmoteManager
                     await File.WriteAllTextAsync(cacheFile, emoteSetJson);
                     
                     _channelEmotes.Clear();
-                    await ParseAndDownloadEmotesAsync(emoteSetJson, _channelEmotes, channelName);
+                    await ParseAndDownloadEmotesAsync(emoteSetJson, _channelEmotes, $"{channelName}/7tv");
                     Console.WriteLine($"Updated {_channelEmotes.Count} channel emotes.");
                 }
             }
@@ -146,6 +146,151 @@ public class EmoteManager
         {
             Console.WriteLine($"Failed to load channel 7TV emotes for {channelName}: {ex.Message}");
             OnEmoteDownloadError?.Invoke(channelName, ex.Message);
+        }
+    }
+    public async Task LoadBTTVEmotesAsync(string twitchUserId, string channelName)
+    {
+        try
+        {
+            var url = $"https://api.betterttv.net/3/cached/users/twitch/{twitchUserId}";
+            var json = await _httpClient.GetStringAsync(url);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            
+            var emotesToDownload = new List<(string url, string path, string name)>();
+            var emotesDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "emotes", channelName, "bttv");
+            if (!Directory.Exists(emotesDir)) Directory.CreateDirectory(emotesDir);
+
+            Action<JsonElement> parseArray = (arr) =>
+            {
+                if (arr.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var emote in arr.EnumerateArray())
+                    {
+                        var code = emote.GetProperty("code").GetString();
+                        var id = emote.GetProperty("id").GetString();
+                        var imgType = emote.TryGetProperty("imageType", out var it) ? it.GetString() : "png";
+                        if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(id))
+                        {
+                            var imgUrl = $"https://cdn.betterttv.net/emote/{id}/3x";
+                            var localFileName = $"{id}.{imgType}";
+                            var localFilePath = Path.Combine(emotesDir, localFileName);
+                            var routeUrl = $"/cache/emotes/{channelName}/bttv/{localFileName}";
+
+                            _channelEmotes[code] = routeUrl;
+
+                            if (!File.Exists(localFilePath))
+                            {
+                                emotesToDownload.Add((imgUrl, localFilePath, code));
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (root.TryGetProperty("channelEmotes", out var channelEmotes)) parseArray(channelEmotes);
+            if (root.TryGetProperty("sharedEmotes", out var sharedEmotes)) parseArray(sharedEmotes);
+            
+            if (emotesToDownload.Count > 0)
+            {
+                Console.WriteLine($"Downloading {emotesToDownload.Count} BTTV emotes...");
+                int total = emotesToDownload.Count;
+                int processed = 0;
+                int successful = 0;
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                
+                OnEmoteDownloadProgress?.Invoke($"{channelName}/bttv", 0, 0, total, 0);
+
+                var downloadTasks = new List<Task>();
+                foreach (var emote in emotesToDownload)
+                {
+                    downloadTasks.Add(Task.Run(async () => {
+                        bool ok = await DownloadEmoteImageAsync(emote.url, emote.path);
+                        int p = Interlocked.Increment(ref processed);
+                        if (ok) Interlocked.Increment(ref successful);
+                        double speed = p / stopwatch.Elapsed.TotalSeconds;
+                        OnEmoteDownloadProgress?.Invoke($"{channelName}/bttv", p, successful, total, speed);
+                    }));
+                }
+                await Task.WhenAll(downloadTasks);
+            }
+            else
+            {
+                OnEmoteDownloadProgress?.Invoke($"{channelName}/bttv", 0, 0, 0, 0);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load BTTV emotes for {channelName}: {ex.Message}");
+        }
+    }
+
+    public async Task LoadFFZEmotesAsync(string twitchUserId, string channelName)
+    {
+        try
+        {
+            var url = $"https://api.betterttv.net/3/cached/frankerfacez/users/twitch/{twitchUserId}";
+            var json = await _httpClient.GetStringAsync(url);
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                var emotesToDownload = new List<(string url, string path, string name)>();
+                var emotesDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "emotes", channelName, "ffz");
+                if (!Directory.Exists(emotesDir)) Directory.CreateDirectory(emotesDir);
+
+                foreach (var emote in doc.RootElement.EnumerateArray())
+                {
+                    var code = emote.GetProperty("code").GetString();
+                    var id = emote.GetProperty("id").GetInt32().ToString();
+                    var imgType = emote.TryGetProperty("imageType", out var it) ? it.GetString() : "png";
+                    if (!string.IsNullOrEmpty(code) && !string.IsNullOrEmpty(id))
+                    {
+                        var imgUrl = $"https://cdn.betterttv.net/frankerfacez_emote/{id}/4";
+                        var localFileName = $"ffz_{id}.{imgType}";
+                        var localFilePath = Path.Combine(emotesDir, localFileName);
+                        var routeUrl = $"/cache/emotes/{channelName}/ffz/{localFileName}";
+
+                        _channelEmotes[code] = routeUrl;
+
+                        if (!File.Exists(localFilePath))
+                        {
+                            emotesToDownload.Add((imgUrl, localFilePath, code));
+                        }
+                    }
+                }
+
+                if (emotesToDownload.Count > 0)
+                {
+                    Console.WriteLine($"Downloading {emotesToDownload.Count} FFZ emotes...");
+                    int total = emotesToDownload.Count;
+                    int processed = 0;
+                    int successful = 0;
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    
+                    OnEmoteDownloadProgress?.Invoke($"{channelName}/ffz", 0, 0, total, 0);
+
+                    var downloadTasks = new List<Task>();
+                    foreach (var emote in emotesToDownload)
+                    {
+                        downloadTasks.Add(Task.Run(async () => {
+                            bool ok = await DownloadEmoteImageAsync(emote.url, emote.path);
+                            int p = Interlocked.Increment(ref processed);
+                            if (ok) Interlocked.Increment(ref successful);
+                            double speed = p / stopwatch.Elapsed.TotalSeconds;
+                            OnEmoteDownloadProgress?.Invoke($"{channelName}/ffz", p, successful, total, speed);
+                        }));
+                    }
+                    await Task.WhenAll(downloadTasks);
+                }
+                else
+                {
+                    OnEmoteDownloadProgress?.Invoke($"{channelName}/ffz", 0, 0, 0, 0);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load FFZ emotes for {channelName}: {ex.Message}");
         }
     }
 

@@ -7,12 +7,13 @@ Write-Host "Building $projectName into a single executable..."
 
 Write-Host "Stopping running instances to release file locks..."
 Stop-Process -Name "TwitchChatCore" -Force -ErrorAction SilentlyContinue
+Stop-Process -Name "TwiChatUpdater" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 2
 
 # 1. Clean the old artifact directory
 if (Test-Path $outputDir) {
     Write-Host "Removing old artifact directory..."
-    cmd.exe /c "rmdir /s /q $($outputDir)"
+    cmd.exe /c "rmdir /s /q $($outputDir) 2>nul"
 }
 
 # 2. Run dotnet publish
@@ -23,8 +24,11 @@ if (Test-Path $outputDir) {
 # -p:IncludeNativeLibrariesForSelfExtract=true: Include native DLLs (like WebView2) inside the single .exe
 # -o $outputDir: Output to the artifact folder
 
-Write-Host "Publishing..."
+Write-Host "Publishing Main App..."
 dotnet publish $projectName -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -o $outputDir
+
+Write-Host "Publishing Updater..."
+dotnet publish .\TwiChatUpdater\TwiChatUpdater.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -o $outputDir
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "Build pipeline completed successfully! Output is in $outputDir" -ForegroundColor Green

@@ -30,6 +30,10 @@ function addMessage(data) {
     if (data.Role && data.Role !== 'none') {
         msgElement.classList.add(`role-${data.Role}`);
     }
+    if (data.IsBot) {
+        msgElement.dataset.isBot = 'true';
+        msgElement.classList.add('role-bot');
+    }
 
     if (data.IsMention) {
         msgElement.classList.add('mention-highlight');
@@ -71,6 +75,10 @@ function addMessage(data) {
     
     msgElement.appendChild(userElement);
     msgElement.appendChild(textElement);
+    
+    if (data.Effect && data.Effect !== '') {
+        textElement.classList.add('msg-effect-' + data.Effect);
+    }
     
     chatContainer.appendChild(msgElement);
     
@@ -129,6 +137,23 @@ function connect() {
     ws.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
+            if (data.Type === 'BlacklistUpdate') {
+                if (Array.isArray(data.Users)) {
+                    const blacklisted = data.Users.map(u => u.toLowerCase());
+                    const allMessages = document.querySelectorAll('.chat-message');
+                    allMessages.forEach(msg => {
+                        if (msg.dataset.username && blacklisted.includes(msg.dataset.username.toLowerCase())) {
+                            msg.style.setProperty('display', 'none', 'important');
+                            msg.classList.add('msg-blacklisted');
+                        } else if (msg.classList.contains('msg-blacklisted')) {
+                            msg.style.removeProperty('display');
+                            msg.classList.remove('msg-blacklisted');
+                        }
+                    });
+                }
+                return;
+            }
+
             if (data.Type === 'ConfigUpdate') {
                 const root = document.documentElement;
                 const body = document.body;
@@ -171,6 +196,9 @@ function connect() {
                 
                 if (data.HideBackground !== undefined) body.classList.toggle('hide-background', data.HideBackground);
                 if (data.HideBadges !== undefined) body.classList.toggle('hide-badges', data.HideBadges);
+                if (data.HideBotMessages !== undefined) body.classList.toggle('hide-bot-messages', data.HideBotMessages);
+                if (data.HideModMessages !== undefined) body.classList.toggle('hide-mod-messages', data.HideModMessages);
+                if (data.HideVipMessages !== undefined) body.classList.toggle('hide-vip-messages', data.HideVipMessages);
                 if (data.EnableRoleColors !== undefined) body.classList.toggle('disable-role-colors', !data.EnableRoleColors);
                 if (data.TextOutline !== undefined) body.classList.toggle('text-outline', data.TextOutline);
                 

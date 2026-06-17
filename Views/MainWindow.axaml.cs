@@ -16,10 +16,59 @@ public partial class MainWindow : Window
 {
     private bool _isInitialized = false;
     private bool _isUpdatingPreset = false;
+    private bool _realExit = false;
+
+    private ComboBoxItem ComboPreset1 = new ComboBoxItem();
+    private ComboBoxItem ComboPreset2 = new ComboBoxItem();
+    private ComboBoxItem ComboPreset3 = new ComboBoxItem();
 
     public MainWindow()
     {
         InitializeComponent();
+
+        this.Closing += (s, e) => {
+            if (ConfigManager.Settings.MinimizeToTray && !_realExit)
+            {
+                e.Cancel = true;
+                this.Hide();
+            }
+        };
+
+        var trayIcons = new Avalonia.Controls.TrayIcons();
+        var trayIcon = new Avalonia.Controls.TrayIcon();
+        trayIcon.ToolTipText = "TwiChatFHR";
+        
+        try {
+            var iconUri = new Uri("avares://TwitchChatCore/Assets/app_main.png");
+            var asset = Avalonia.Platform.AssetLoader.Open(iconUri);
+            var bitmap = new Avalonia.Media.Imaging.Bitmap(asset);
+            trayIcon.Icon = new Avalonia.Controls.WindowIcon(bitmap);
+        } catch {}
+        
+        trayIcon.Clicked += TrayOpen_Click;
+        
+        var trayMenu = new Avalonia.Controls.NativeMenu();
+        
+        var openItem = new Avalonia.Controls.NativeMenuItem();
+        openItem.Bind(Avalonia.Controls.NativeMenuItem.HeaderProperty, this.GetResourceObservable("TrayOpen"));
+        openItem.Click += TrayOpen_Click;
+        
+        var copyItem = new Avalonia.Controls.NativeMenuItem();
+        copyItem.Bind(Avalonia.Controls.NativeMenuItem.HeaderProperty, this.GetResourceObservable("TrayCopyLink"));
+        copyItem.Click += TrayCopyLink_Click;
+        
+        var exitItem = new Avalonia.Controls.NativeMenuItem();
+        exitItem.Bind(Avalonia.Controls.NativeMenuItem.HeaderProperty, this.GetResourceObservable("TrayExit"));
+        exitItem.Click += TrayExit_Click;
+
+        trayMenu.Add(openItem);
+        trayMenu.Add(copyItem);
+        trayMenu.Add(new Avalonia.Controls.NativeMenuItemSeparator());
+        trayMenu.Add(exitItem);
+        
+        trayIcon.Menu = trayMenu;
+        trayIcons.Add(trayIcon);
+        Avalonia.Controls.TrayIcon.SetIcons(Avalonia.Application.Current!, trayIcons);
 
         UpdateUIFromConfig();
 
@@ -29,6 +78,10 @@ public partial class MainWindow : Window
         Preset3NameBox.Text = ConfigManager.Settings.CustomPresets.Count > 2 ? ConfigManager.Settings.CustomPresets[2].Name : "";
 
         this.Loaded += async (s, e) => {
+            this.Topmost = true;
+            this.Topmost = false;
+            this.Activate();
+
             while (App.LocalServer == null || string.IsNullOrEmpty(App.LocalServer.BaseUrl))
             {
                 await Task.Delay(50);
@@ -51,17 +104,35 @@ public partial class MainWindow : Window
                 {
                     if (total > 0)
                     {
+                        string providerName = "7TV";
+                        string pureChannelName = channel;
+                        if (channel.EndsWith("/7tv")) {
+                            pureChannelName = channel.Substring(0, channel.Length - 4);
+                        } else if (channel.EndsWith("/bttv")) {
+                            providerName = "BTTV";
+                            pureChannelName = channel.Substring(0, channel.Length - 5);
+                        } else if (channel.EndsWith("/ffz")) {
+                            providerName = "FFZ";
+                            pureChannelName = channel.Substring(0, channel.Length - 4);
+                        }
+                        
                         EmoteProgressBar.Maximum = total;
                         EmoteProgressBar.Value = successful;
                         int failed = processed - successful;
+                        
+                        string normTpl = Application.Current!.FindResource("EmoteProgressNormal") as string ?? "7TV Emotes for {0} ({1}/{2})";
+                        string errTpl = Application.Current!.FindResource("EmoteProgressWithErrors") as string ?? "7TV Emotes for {0} ({1}/{2}) [Errors: {3}]";
+                        normTpl = normTpl.Replace("7TV", providerName);
+                        errTpl = errTpl.Replace("7TV", providerName);
+
                         if (failed > 0)
                         {
-                            EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressWithErrors") as string ?? "7TV Emotes for {0} ({1}/{2}) [Errors: {3}]", channel, successful, total, failed);
+                            EmoteProgressText.Text = string.Format(errTpl, pureChannelName, successful, total, failed);
                             EmoteProgressText.Foreground = Avalonia.Media.Brushes.Orange;
                         }
                         else
                         {
-                            EmoteProgressText.Text = string.Format(Application.Current!.FindResource("EmoteProgressNormal") as string ?? "7TV Emotes for {0} ({1}/{2})", channel, successful, total);
+                            EmoteProgressText.Text = string.Format(normTpl, pureChannelName, successful, total);
                             EmoteProgressText.Foreground = Avalonia.Media.Brushes.LightGreen;
                         }
                     }
@@ -149,13 +220,23 @@ public partial class MainWindow : Window
     private void DesignComboBox_Changed(object? sender, SelectionChangedEventArgs e)
     {
         if (!_isInitialized || _isUpdatingPreset) return;
-        TwitchChatCore.Core.Theme selectedTheme = (TwitchChatCore.Core.Theme)ThemeComboBox.SelectedIndex;
+        
+        if (sender == ThemeComboBox)
+        {
+            TwitchChatCore.Core.Theme selectedTheme = (TwitchChatCore.Core.Theme)ThemeComboBox.SelectedIndex;
 
-        if (selectedTheme == TwitchChatCore.Core.Theme.Custom1) { LoadPreset_Logic(0); return; }
-        if (selectedTheme == TwitchChatCore.Core.Theme.Custom2) { LoadPreset_Logic(1); return; }
-        if (selectedTheme == TwitchChatCore.Core.Theme.Custom3) { LoadPreset_Logic(2); return; }
+            if (selectedTheme == TwitchChatCore.Core.Theme.Custom1) { LoadPreset_Logic(0); return; }
+            if (selectedTheme == TwitchChatCore.Core.Theme.Custom2) { LoadPreset_Logic(1); return; }
+            if (selectedTheme == TwitchChatCore.Core.Theme.Custom3) { LoadPreset_Logic(2); return; }
 
-        ApplyPreset(selectedTheme);
+            ApplyPreset(selectedTheme);
+        }
+        else
+        {
+            SetCustomPreset();
+            CheckAndApplyPresetMatch();
+        }
+        
         SaveDesignSettings();
     }
 
@@ -270,13 +351,27 @@ public partial class MainWindow : Window
         ConfigManager.Settings.MessageSpacing = SpacingSlider.Value;
         ConfigManager.Settings.GlassOpacity = OpacitySlider.Value / 100.0;
         
+        bool emotesChanged = false;
+        if (ConfigManager.Settings.ShowStreamerEmotes != (StreamerEmotesCheck.IsChecked ?? true)) emotesChanged = true;
+        if (ConfigManager.Settings.ShowBTTVEmotes != (ShowBTTVEmotesCheck.IsChecked ?? true)) emotesChanged = true;
+        if (ConfigManager.Settings.ShowFFZEmotes != (ShowFFZEmotesCheck.IsChecked ?? true)) emotesChanged = true;
+        
         ConfigManager.Settings.ShowStreamerEmotes = StreamerEmotesCheck.IsChecked ?? true;
         ConfigManager.Settings.ShowGlobalEmotes = GlobalEmotesCheck.IsChecked ?? true;
         ConfigManager.Settings.ShowGlobal7TVEmotes = Global7TVEmotesCheck.IsChecked ?? false;
+        ConfigManager.Settings.ShowBTTVEmotes = ShowBTTVEmotesCheck.IsChecked ?? true;
+        ConfigManager.Settings.ShowFFZEmotes = ShowFFZEmotesCheck.IsChecked ?? true;
+        ConfigManager.Settings.EnableChatEffects = EnableChatEffectsCheck.IsChecked ?? false;
+        
         ConfigManager.Settings.HideBackground = HideBackgroundCheck.IsChecked ?? false;
         ConfigManager.Settings.HideBadges = HideBadgesCheck.IsChecked ?? false;
+        ConfigManager.Settings.HideBotMessages = HideBotMessagesCheck.IsChecked ?? false;
+        ConfigManager.Settings.HideModMessages = HideModMessagesCheck.IsChecked ?? false;
+        ConfigManager.Settings.HideVipMessages = HideVipMessagesCheck.IsChecked ?? false;
         ConfigManager.Settings.EnableRoleColors = EnableRoleColorsCheck.IsChecked ?? true;
         ConfigManager.Settings.TextOutline = TextOutlineCheck.IsChecked ?? false;
+        ConfigManager.Settings.EnableJokeScript = EnableJokeScriptCheck.IsChecked ?? false;
+        ConfigManager.Settings.MinimizeToTray = MinimizeToTrayCheck.IsChecked ?? false;
         
         ConfigManager.Settings.DesignTheme = (TwitchChatCore.Core.Theme)(ThemeComboBox.SelectedIndex >= 0 ? ThemeComboBox.SelectedIndex : 0);
         ConfigManager.Settings.BorderStyle = (MessageBorderStyle)(BorderStyleComboBox.SelectedIndex >= 0 ? BorderStyleComboBox.SelectedIndex : 0);
@@ -305,6 +400,12 @@ public partial class MainWindow : Window
         
         _ = Task.Run(() => ConfigManager.Save());
         BroadcastDesignUpdate();
+        
+        if (emotesChanged && App.LocalServer?.App != null)
+        {
+            var ircClient = App.LocalServer.App.Services.GetService(typeof(TwitchChatCore.Server.TwitchIrcClient)) as TwitchChatCore.Server.TwitchIrcClient;
+            ircClient?.ReloadEmotes();
+        }
     }
 
     private void BroadcastDesignUpdate()
@@ -324,6 +425,9 @@ public partial class MainWindow : Window
                     ""ShowGlobal7TVEmotes"": {ConfigManager.Settings.ShowGlobal7TVEmotes.ToString().ToLower()},
                     ""HideBackground"": {ConfigManager.Settings.HideBackground.ToString().ToLower()},
                     ""HideBadges"": {ConfigManager.Settings.HideBadges.ToString().ToLower()},
+                    ""HideBotMessages"": {ConfigManager.Settings.HideBotMessages.ToString().ToLower()},
+                    ""HideModMessages"": {ConfigManager.Settings.HideModMessages.ToString().ToLower()},
+                    ""HideVipMessages"": {ConfigManager.Settings.HideVipMessages.ToString().ToLower()},
                     ""EnableRoleColors"": {ConfigManager.Settings.EnableRoleColors.ToString().ToLower()},
                     ""TextOutline"": {ConfigManager.Settings.TextOutline.ToString().ToLower()},
                     ""TextColor"": ""{ConfigManager.Settings.CustomTextColor}"",
@@ -361,6 +465,78 @@ public partial class MainWindow : Window
         PreviewPanel.IsVisible = true;
     }
 
+    private void EditBlacklist_Click(object? sender, RoutedEventArgs e)
+    {
+        string path = System.IO.Path.Combine(TwitchChatCore.Core.ConfigManager.DataDir, "blacklist.txt");
+        if (!System.IO.File.Exists(path))
+        {
+            System.IO.File.WriteAllText(path, "# Впишите сюда ники, которые нужно игнорировать (по одному на каждой строке)\n");
+        }
+        
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not open blacklist: {ex.Message}");
+        }
+    }
+
+    private void EditBanPhrases_Click(object? sender, RoutedEventArgs e)
+    {
+        string path = System.IO.Path.Combine(TwitchChatCore.Core.ConfigManager.DataDir, "ban_phrases.txt");
+        if (!System.IO.File.Exists(path))
+        {
+            System.IO.File.WriteAllText(path, "# Впишите фразы для автобана (по одной на строке)\nя в нарезке\nя в телевизоре\nпередаю привет\n");
+        }
+        
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not open ban phrases: {ex.Message}");
+        }
+    }
+
+    private void CheckForUpdates_Click(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var appDir = TwitchChatCore.Core.ConfigManager.AppDir;
+            var updaterPath = System.IO.Path.Combine(appDir, "TwiChatUpdater.exe");
+            
+            if (System.IO.File.Exists(updaterPath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = updaterPath,
+                    UseShellExecute = true
+                });
+                Environment.Exit(0);
+            }
+            else
+            {
+                // Optionally show a message that updater is missing
+                Console.WriteLine("Updater not found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not start updater: {ex.Message}");
+        }
+    }
+
     private void TextBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
         if (TestModePanel != null)
@@ -378,6 +554,11 @@ public partial class MainWindow : Window
         if (!_isInitialized) return;
         if (e.Property.Name == "Value")
         {
+            if (TestSpeedValText != null && TestSpeedSlider != null)
+            {
+                TestSpeedValText.Text = TestSpeedSlider.Value.ToString();
+            }
+
             if (App.LocalServer?.App != null && TestSpeedSlider != null)
             {
                 var twitchClient = App.LocalServer.App.Services.GetService(typeof(Server.TwitchIrcClient)) as Server.TwitchIrcClient;
@@ -564,10 +745,18 @@ public partial class MainWindow : Window
         StreamerEmotesCheck.IsChecked = ConfigManager.Settings.ShowStreamerEmotes;
         GlobalEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobalEmotes;
         Global7TVEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobal7TVEmotes;
+        ShowBTTVEmotesCheck.IsChecked = ConfigManager.Settings.ShowBTTVEmotes;
+        ShowFFZEmotesCheck.IsChecked = ConfigManager.Settings.ShowFFZEmotes;
+        EnableChatEffectsCheck.IsChecked = ConfigManager.Settings.EnableChatEffects;
+        
         HideBackgroundCheck.IsChecked = ConfigManager.Settings.HideBackground;
         HideBadgesCheck.IsChecked = ConfigManager.Settings.HideBadges;
+        HideBotMessagesCheck.IsChecked = ConfigManager.Settings.HideBotMessages;
+        HideModMessagesCheck.IsChecked = ConfigManager.Settings.HideModMessages;
+        HideVipMessagesCheck.IsChecked = ConfigManager.Settings.HideVipMessages;
         EnableRoleColorsCheck.IsChecked = ConfigManager.Settings.EnableRoleColors;
         TextOutlineCheck.IsChecked = ConfigManager.Settings.TextOutline;
+        EnableJokeScriptCheck.IsChecked = ConfigManager.Settings.EnableJokeScript;
         
         ThemeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignTheme;
         BorderStyleComboBox.SelectedIndex = (int)ConfigManager.Settings.BorderStyle;
@@ -596,6 +785,8 @@ public partial class MainWindow : Window
 
         if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
         else LangComboBox.SelectedIndex = 1;
+        
+        MinimizeToTrayCheck.IsChecked = ConfigManager.Settings.MinimizeToTray;
 
         if (ConfigManager.Settings.CustomPresets.Count > 0)
         {
@@ -787,5 +978,22 @@ public partial class MainWindow : Window
                 }));
             }
         }
+    }
+    private void TrayOpen_Click(object? sender, EventArgs e)
+    {
+        this.Show();
+        this.WindowState = WindowState.Normal;
+        this.Activate();
+    }
+
+    private void TrayCopyLink_Click(object? sender, EventArgs e)
+    {
+        CopyUrl_Click(sender, new RoutedEventArgs());
+    }
+
+    private void TrayExit_Click(object? sender, EventArgs e)
+    {
+        _realExit = true;
+        this.Close();
     }
 }

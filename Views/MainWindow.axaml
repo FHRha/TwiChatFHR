@@ -9,9 +9,10 @@
         Title="{DynamicResource MainWindowTitle}"
         Width="1150" Height="750" MinWidth="800" MinHeight="500"
         Background="#0F172A"
+        RequestedThemeVariant="Dark"
         ExtendClientAreaToDecorationsHint="True"
-        WindowStartupLocation="CenterScreen">
-
+        WindowStartupLocation="CenterScreen"
+        Icon="avares://TwitchChatCore/Assets/app_main.png">
     <Grid>
         <Grid ColumnDefinitions="420, *" Margin="0, 30, 0, 0">
             <!-- Settings Panel -->
@@ -32,8 +33,8 @@
                         </StackPanel>
                     </Border>
 
-                    <ScrollViewer Grid.Row="1" Padding="0,0,16,0" Margin="0,0,-8,0">
-                        <StackPanel Spacing="16" Margin="0,0,0,0">
+                    <ScrollViewer Grid.Row="1" Margin="0,0,-8,0" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Spacing="16" Margin="0,0,16,0">
                             <Grid>
                                 <TextBlock Text="{DynamicResource DesignStudio}" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF" />
                                 <Button HorizontalAlignment="Right" Background="Transparent" Foreground="#94A3B8" Click="OpenSettings_Click" Padding="8,4" Cursor="Hand">
@@ -54,9 +55,6 @@
                                         <ComboBoxItem Content="{DynamicResource ThemeMinimalism}"/>
                                         <ComboBoxItem Content="{DynamicResource ThemeRetro}"/>
                                         <ComboBoxItem Content="{DynamicResource ThemeCustom}"/>
-                                        <ComboBoxItem Name="ComboPreset1" Content="Preset 1"/>
-                                        <ComboBoxItem Name="ComboPreset2" Content="Preset 2"/>
-                                        <ComboBoxItem Name="ComboPreset3" Content="Preset 3"/>
                                     </ComboBox>
                                 </StackPanel>
                                 <Grid ColumnDefinitions="*, *">
@@ -231,17 +229,64 @@
                                     <CheckBox Name="EnableGroupingCheck" Content="{DynamicResource EnableGroupingCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
                                     <CheckBox Name="HighlightMentionsCheck" Content="{DynamicResource HighlightMentionsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                                     <CheckBox Name="HighlightFirstMessageCheck" Content="{DynamicResource HighlightFirstMessageCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                    <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                    <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                    <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                                     <CheckBox Name="HideBackgroundCheck" Content="{DynamicResource HideBackgroundCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                                     <CheckBox Name="HideBadgesCheck" Content="{DynamicResource HideBadgesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="HideBotMessagesCheck" Content="{DynamicResource HideBotMessagesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="HideModMessagesCheck" Content="{DynamicResource HideModMessagesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="HideVipMessagesCheck" Content="{DynamicResource HideVipMessagesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                                     <CheckBox Name="EnableRoleColorsCheck" Content="{DynamicResource EnableRoleColorsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                                     <CheckBox Name="TextOutlineCheck" Content="{DynamicResource TextOutlineCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <StackPanel Margin="0,0,0,0">
+                                        <CheckBox Name="EnableJokeScriptCheck" Content="{DynamicResource EnableJokeScriptCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                        <TextBlock Text="{DynamicResource JokeScriptDescription}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="25,-5,0,0" />
+                                    </StackPanel>
+                                    <Grid ColumnDefinitions="*,*" Margin="0,5,0,0">
+                                        <Button Grid.Column="0" Margin="0,0,5,0" Click="EditBlacklist_Click" Background="#334155" Foreground="#E2E8F0" Padding="10,6" CornerRadius="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                            <TextBlock Text="{DynamicResource EditBlacklistLabel}" TextTrimming="CharacterEllipsis" TextAlignment="Center" />
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Background" Value="#475569"/>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+                                        <Button Grid.Column="1" Margin="5,0,0,0" Click="EditBanPhrases_Click" Background="#334155" Foreground="#E2E8F0" Padding="10,6" CornerRadius="4" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                            <TextBlock Text="{DynamicResource EditBanPhrasesLabel}" TextTrimming="CharacterEllipsis" TextAlignment="Center" />
+                                            <Button.Styles>
+                                                <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Background" Value="#475569"/>
+                                                </Style>
+                                            </Button.Styles>
+                                        </Button>
+                                    </Grid>
                                 </StackPanel>
                             </StackPanel>
 
                             <Separator Background="#334155" Margin="0,5" Height="1"/>
+
+                            <!-- 😃 Эмоуты -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,5">
+                                <PathIcon Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M7,9.5C7,8.7 7.7,8 8.5,8C9.3,8 10,8.7 10,9.5C10,10.3 9.3,11 8.5,11C7.7,11 7,10.3 7,9.5M12,17.5C9.7,17.5 7.8,16 7,14H17C16.2,16 14.3,17.5 12,17.5M15.5,11C14.7,11 14,10.3 14,9.5C14,8.7 14.7,8 15.5,8C16.3,8 17,8.7 17,9.5C17,10.3 16.3,11 15.5,11Z" Width="16" Height="16" Foreground="#38BDF8"/>
+                                <TextBlock Text="{DynamicResource CategoryEmotes}" FontSize="16" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Spacing="8" Margin="0,0,0,10">
+                                <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
+                                <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="ShowBTTVEmotesCheck" Content="{DynamicResource ShowBTTVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="ShowFFZEmotesCheck" Content="{DynamicResource ShowFFZEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                            </StackPanel>
+                            
+                            <Separator Background="#334155" Margin="0,5" Height="1"/>
+                            
+                            <!-- 💬 Команды чата -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,5">
+                                <PathIcon Data="M20,2H4C2.9,2 2,2.9 2,4V22L6,18H20C21.1,18 22,17.1 22,16V4C22,2.9 21.1,2 20,2M11,14H9V12H11V14M11,10H9V6H11V10M15,14H13V12H15V14M15,10H13V6H15V10Z" Width="16" Height="16" Foreground="#38BDF8"/>
+                                <TextBlock Text="{DynamicResource CategoryCommands}" FontSize="16" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Spacing="8" Margin="0,0,0,10">
+                                <CheckBox Name="EnableChatEffectsCheck" Content="{DynamicResource EnableChatEffectsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
+                                <TextBlock Text="{DynamicResource ChatEffectsHint}" TextWrapping="Wrap" Foreground="#94A3B8" FontSize="11" Margin="24,-4,0,0"/>
+                            </StackPanel>
 
                             <TextBlock Text="{DynamicResource DesignHintText}" TextWrapping="Wrap" Foreground="#64748B" FontSize="12"/>
                         </StackPanel>
@@ -294,12 +339,17 @@
                     <!-- Hidden Test Mode Panel -->
                     <StackPanel Name="TestModePanel" IsVisible="False" Spacing="6" Margin="0,5,0,0">
                         <Border Background="#3B82F6" CornerRadius="4" Padding="6,2">
-                            <TextBlock Text="TEST MODE ACTIVE" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{DynamicResource TestModeActiveLabel}" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="Simulation Speed (ms):" FontSize="12" Foreground="#94A3B8"/>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Grid.Column="0" Text="{DynamicResource SimulationSpeedLabel}" FontSize="12" Foreground="#94A3B8"/>
+                            <TextBlock Grid.Column="1" Name="TestSpeedValText" Text="1000" FontSize="12" Foreground="#94A3B8" FontWeight="Bold"/>
+                        </Grid>
                         <Slider Name="TestSpeedSlider" Minimum="100" Maximum="3000" Value="1000" TickFrequency="100" IsSnapToTickEnabled="True" PropertyChanged="TestSpeedSlider_PropertyChanged" />
                     </StackPanel>
                 </StackPanel>
+
+                <CheckBox Name="MinimizeToTrayCheck" Content="{DynamicResource MinimizeToTrayCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
 
                 <StackPanel Spacing="6">
                     <TextBlock Text="{DynamicResource ServerPortLabel}" FontWeight="SemiBold"/>
@@ -321,6 +371,14 @@
                     <TextBox Name="ObsUrlTextBox" IsReadOnly="True" />
                     <Button Content="{DynamicResource CopyLinkButton}" Click="CopyUrl_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
                 </StackPanel>
+
+                <Button Content="{DynamicResource CheckForUpdatesLabel}" Click="CheckForUpdates_Click" Background="#2563EB" Foreground="White" Padding="10,6" CornerRadius="4" Margin="0,15,0,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontWeight="Bold">
+                    <Button.Styles>
+                        <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="#1D4ED8"/>
+                        </Style>
+                    </Button.Styles>
+                </Button>
                 </StackPanel>
                 </ScrollViewer>
             </Grid>

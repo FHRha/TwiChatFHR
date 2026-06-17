@@ -12,10 +12,21 @@
     <sys:String x:Key="ColorBroadcasterLabel">Streamer</sys:String>
     <sys:String x:Key="ColorModLabel">Mod</sys:String>
     <sys:String x:Key="ColorVipLabel">VIP</sys:String>
-    <sys:String x:Key="StreamerEmotesCheck">Streamer Emotes</sys:String>
+    <sys:String x:Key="StreamerEmotesCheck">7TV Emotes</sys:String>
     <sys:String x:Key="GlobalEmotesCheck">Twitch Emotes</sys:String>
     <sys:String x:Key="Global7TVEmotesCheck">Global 7TV Emotes</sys:String>
     <sys:String x:Key="TextOutlineCheck">Text Shadow</sys:String>
+    <sys:String x:Key="EditBlacklistLabel">Edit Blacklist</sys:String>
+    <sys:String x:Key="EditBanPhrasesLabel">Edit auto-ban phrases</sys:String>
+    <sys:String x:Key="CheckForUpdatesLabel">Check for updates</sys:String>
+    <sys:String x:Key="EnableJokeScriptCheck">Activate schoolkid catcher script</sys:String>
+    <sys:String x:Key="JokeScriptDescription">Automatically blacklists users who write certain phrases (configure in ban_phrases.txt)</sys:String>
+    <sys:String x:Key="TestModeActiveLabel">TEST MODE ACTIVE</sys:String>
+    <sys:String x:Key="SimulationSpeedLabel">Simulation Speed (ms):</sys:String>
+    <sys:String x:Key="MinimizeToTrayCheck">Minimize to tray on close</sys:String>
+    <sys:String x:Key="TrayOpen">Open Application</sys:String>
+    <sys:String x:Key="TrayCopyLink">Copy OBS Link</sys:String>
+    <sys:String x:Key="TrayExit">Exit Application</sys:String>
     <sys:String x:Key="HideBackgroundCheck">Hide Background</sys:String>
     <sys:String x:Key="HideBadgesCheck">Hide Badges</sys:String>
     <sys:String x:Key="EnableRoleColorsCheck">Highlight Roles (Mod/VIP)</sys:String>
@@ -63,6 +74,18 @@
     <sys:String x:Key="EnableGroupingCheck">Group Messages from Same User</sys:String>
     <sys:String x:Key="HighlightMentionsCheck">Highlight @Mentions</sys:String>
     <sys:String x:Key="HighlightFirstMessageCheck">Highlight First Message</sys:String>
+    
+    <sys:String x:Key="CategoryEmotes">Emotes</sys:String>
+    <sys:String x:Key="ShowBTTVEmotesCheck">BetterTTV Emotes</sys:String>
+    <sys:String x:Key="ShowFFZEmotesCheck">FrankerFaceZ Emotes</sys:String>
+    
+    <sys:String x:Key="CategoryCommands">Chat Commands</sys:String>
+    <sys:String x:Key="EnableChatEffectsCheck">Text Animations (p!, s!)</sys:String>
+    <sys:String x:Key="ChatEffectsHint">Allows viewers to use prefixes 'p! ' (rainbow) and 's! ' (shake) to animate their messages.</sys:String>
+
+    <sys:String x:Key="HideBotMessagesCheck">Hide Bot Messages</sys:String>
+    <sys:String x:Key="HideModMessagesCheck">Hide Moderator Messages</sys:String>
+    <sys:String x:Key="HideVipMessagesCheck">Hide VIP Messages</sys:String>
 
     <sys:String x:Key="DesignHintText">Drag sliders to see real-time updates in the preview and on your stream.</sys:String>
     

@@ -11,12 +11,18 @@ public static class NetworkManager
     private static readonly HttpClient _httpClient = new HttpClient(new SocketsHttpHandler 
     { 
         AutomaticDecompression = System.Net.DecompressionMethods.All,
-        PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+        PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+        SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+        {
+            EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13,
+            RemoteCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+        }
     }) 
-    { Timeout = TimeSpan.FromSeconds(15) };
+    { Timeout = TimeSpan.FromSeconds(30) };
     private static List<string> _apiMirrors = new() { "https://7tv.io", "https://api.7tv.app" };
     private static List<string> _cdnMirrors = new() { "https://cdn.7tv.app", "https://cdn.zerotv.app" };
     private static bool _mirrorsLoaded = false;
+    private static readonly object _mirrorsLock = new object();
 
     static NetworkManager()
     {
@@ -35,14 +41,20 @@ public static class NetworkManager
             {
                 var apis = new List<string>();
                 foreach (var el in apiElement.EnumerateArray()) apis.Add(el.GetString()?.TrimEnd('/') ?? "");
-                if (apis.Count > 0) _apiMirrors = apis;
+                if (apis.Count > 0) 
+                {
+                    lock (_mirrorsLock) { _apiMirrors = apis; }
+                }
             }
 
             if (doc.RootElement.TryGetProperty("cdn", out var cdnElement))
             {
                 var cdns = new List<string>();
                 foreach (var el in cdnElement.EnumerateArray()) cdns.Add(el.GetString()?.TrimEnd('/') ?? "");
-                if (cdns.Count > 0) _cdnMirrors = cdns;
+                if (cdns.Count > 0) 
+                {
+                    lock (_mirrorsLock) { _cdnMirrors = cdns; }
+                }
             }
             Console.WriteLine($"Loaded {_apiMirrors.Count} API mirrors and {_cdnMirrors.Count} CDN mirrors from GitHub.");
         }
@@ -58,19 +70,28 @@ public static class NetworkManager
     {
         var customWorker = ConfigManager.Settings.CustomWorkerUrl?.TrimEnd('/');
         
-        // Remove old custom worker if it exists
-        _apiMirrors.RemoveAll(x => x != "https://7tv.io" && x != "https://api.7tv.app" && x != "https://eu.7tv.app");
-        _cdnMirrors.RemoveAll(x => x != "https://cdn.7tv.app" && x != "https://cdn.zerotv.app");
-
-        if (!string.IsNullOrWhiteSpace(customWorker))
+        lock (_mirrorsLock)
         {
-            if (!_apiMirrors.Contains(customWorker)) _apiMirrors.Insert(0, customWorker);
-            if (!_cdnMirrors.Contains(customWorker)) _cdnMirrors.Insert(0, customWorker);
+            // Remove old custom worker if it exists
+            _apiMirrors.RemoveAll(x => x != "https://7tv.io" && x != "https://api.7tv.app" && x != "https://eu.7tv.app");
+            _cdnMirrors.RemoveAll(x => x != "https://cdn.7tv.app" && x != "https://cdn.zerotv.app");
+
+            if (!string.IsNullOrWhiteSpace(customWorker))
+            {
+                if (!_apiMirrors.Contains(customWorker)) _apiMirrors.Insert(0, customWorker);
+                if (!_cdnMirrors.Contains(customWorker)) _cdnMirrors.Insert(0, customWorker);
+            }
         }
     }
 
-    public static List<string> GetApiMirrors() => _apiMirrors;
-    public static List<string> GetCdnMirrors() => _cdnMirrors;
+    public static List<string> GetApiMirrors() 
+    { 
+        lock (_mirrorsLock) return new List<string>(_apiMirrors); 
+    }
+    public static List<string> GetCdnMirrors() 
+    { 
+        lock (_mirrorsLock) return new List<string>(_cdnMirrors); 
+    }
 
     public static HttpClient GetClient() => _httpClient;
 }

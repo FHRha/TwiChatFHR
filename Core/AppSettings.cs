@@ -58,6 +58,7 @@ public class AppSettings
     public string ProxyAddress { get; set; } = "127.0.0.1";
     public int ProxyPort { get; set; } = 10809;
     public string SingboxLink { get; set; } = "";
+    public bool EnableJokeScript { get; set; } = false;
     public SevenTVMode SevenTVEmotesMode { get; set; } = SevenTVMode.ChannelAndGlobal;
     public string GithubBadgesUrl { get; set; } = "https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/Server/Resources/global_badges.json";
     public string CustomWorkerUrl { get; set; } = "";
@@ -69,19 +70,31 @@ public class AppSettings
     public double MessageSpacing { get; set; } = 4;
     
     // Feature Flags
+    public bool EnableMessageGrouping { get; set; } = true;
+    public bool HighlightMentions { get; set; } = false;
+    public bool HighlightFirstMessage { get; set; } = true;
+    
+    // Emotes
     public bool ShowStreamerEmotes { get; set; } = true;
     public bool ShowGlobalEmotes { get; set; } = true;
     public bool ShowGlobal7TVEmotes { get; set; } = false;
+    public bool ShowBTTVEmotes { get; set; } = false;
+    public bool ShowFFZEmotes { get; set; } = false;
+    
+    // Chat Commands
+    public bool EnableChatEffects { get; set; } = false;
+    
+    // Extra
     public bool HideBackground { get; set; } = false;
     public bool HideBadges { get; set; } = false;
+    public bool HideBotMessages { get; set; } = false;
+    public bool HideModMessages { get; set; } = false;
+    public bool HideVipMessages { get; set; } = false;
     public bool TextOutline { get; set; } = true;
     public bool EnableRoleColors { get; set; } = true;
     
     // Premium Design Features
     public AnimationStyle AnimationType { get; set; } = AnimationStyle.Pop;
-    public bool EnableMessageGrouping { get; set; } = true;
-    public bool HighlightMentions { get; set; } = false;
-    public bool HighlightFirstMessage { get; set; } = true;
     public Theme DesignTheme { get; set; } = Theme.Glass;
     public MessageShape DesignShape { get; set; } = MessageShape.Round;
     public MessageBorderStyle BorderStyle { get; set; } = MessageBorderStyle.Glass;
@@ -94,4 +107,5 @@ public class AppSettings
     public string ColorMod { get; set; } = "#10B981";
     public string ColorVip { get; set; } = "#EC4899";
     public string Language { get; set; } = "ru";
+    public bool MinimizeToTray { get; set; } = false;
 }

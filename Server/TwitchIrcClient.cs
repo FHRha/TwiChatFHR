@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.Json;
+using System.Linq;
+using System.Collections.Generic;
 using TwitchChatCore.Core;
 
 namespace TwitchChatCore.Server;
@@ -38,6 +40,87 @@ public class TwitchIrcClient
         _badgeManager = badgeManager;
         _emoteManager = emoteManager;
         _channel = ConfigManager.Settings.TwitchChannel;
+    }
+
+    private HashSet<string> _blacklistedUsers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private DateTime _blacklistLastModified = DateTime.MinValue;
+
+    private bool IsUserBlacklisted(string username)
+    {
+        try
+        {
+            string path = System.IO.Path.Combine(ConfigManager.DataDir, "blacklist.txt");
+            if (System.IO.File.Exists(path))
+            {
+                var modified = System.IO.File.GetLastWriteTimeUtc(path);
+                if (modified > _blacklistLastModified)
+                {
+                    var lines = System.IO.File.ReadAllLines(path);
+                    var newSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var line in lines)
+                    {
+                        var trimmed = line.Trim();
+                        if (!string.IsNullOrEmpty(trimmed) && !trimmed.StartsWith("#"))
+                        {
+                            newSet.Add(trimmed);
+                        }
+                    }
+                    _blacklistedUsers = newSet;
+                    _blacklistLastModified = modified;
+                    BroadcastBlacklist();
+                }
+            }
+        }
+        catch { }
+
+        return _blacklistedUsers.Contains(username);
+    }
+
+    private void BroadcastBlacklist()
+    {
+        var usersArr = new string[_blacklistedUsers.Count];
+        _blacklistedUsers.CopyTo(usersArr);
+        var usersJson = System.Text.Json.JsonSerializer.Serialize(usersArr);
+        string json = $@"{{
+            ""Type"": ""BlacklistUpdate"",
+            ""Users"": {usersJson}
+        }}";
+        _ = _chatHub.BroadcastMessageAsync(json);
+    }
+
+    private string[] _banPhrases = new[] { "я в нарезке", "я в телевизоре", "передаю привет" };
+    private DateTime _banPhrasesLastModified = DateTime.MinValue;
+
+    private string[] GetBanPhrases()
+    {
+        try
+        {
+            string path = System.IO.Path.Combine(ConfigManager.DataDir, "ban_phrases.txt");
+            if (!System.IO.File.Exists(path))
+            {
+                System.IO.File.WriteAllText(path, "# Впишите фразы для автобана (по одной на строке)\nя в нарезке\nя в телевизоре\nпередаю привет\n");
+            }
+
+            var modified = System.IO.File.GetLastWriteTimeUtc(path);
+            if (modified > _banPhrasesLastModified)
+            {
+                var lines = System.IO.File.ReadAllLines(path);
+                var validPhrases = new System.Collections.Generic.List<string>();
+                foreach (var line in lines)
+                {
+                    var trimmed = line.Trim().ToLower();
+                    if (!string.IsNullOrEmpty(trimmed) && !trimmed.StartsWith("#"))
+                    {
+                        validPhrases.Add(trimmed);
+                    }
+                }
+                _banPhrases = validPhrases.ToArray();
+                _banPhrasesLastModified = modified;
+            }
+        }
+        catch { }
+
+        return _banPhrases;
     }
 
     public void SetChannel(string channel)
@@ -284,6 +367,7 @@ public class TwitchIrcClient
             string text = "";
             string messageId = "";
             string role = "none";
+            string rawBadges = "";
             bool isFirstMessage = false;
             var badgeUrls = new System.Collections.Generic.List<string>();
             var twitchEmotes = new System.Collections.Generic.List<(int Start, int End, string Id)>();
@@ -309,16 +393,24 @@ public class TwitchIrcClient
                             {
                                 _ = _emoteManager.LoadChannelEmotesAsync(_currentRoomId, _channel);
                             }
+                            if (TwitchChatCore.Core.ConfigManager.Settings.ShowBTTVEmotes)
+                            {
+                                _ = _emoteManager.LoadBTTVEmotesAsync(_currentRoomId, _channel);
+                            }
+                            if (TwitchChatCore.Core.ConfigManager.Settings.ShowFFZEmotes)
+                            {
+                                _ = _emoteManager.LoadFFZEmotesAsync(_currentRoomId, _channel);
+                            }
                         }
                     }
                     if (tag.StartsWith("badges=") && tag.Length > 7)
                     {
-                        var badgesStr = tag.Substring(7);
-                        if (badgesStr.Contains("broadcaster/")) role = "broadcaster";
-                        else if (badgesStr.Contains("moderator/")) role = "mod";
-                        else if (badgesStr.Contains("vip/")) role = "vip";
+                        rawBadges = tag.Substring(7);
+                        if (rawBadges.Contains("broadcaster/")) role = "broadcaster";
+                        else if (rawBadges.Contains("moderator/")) role = "mod";
+                        else if (rawBadges.Contains("vip/")) role = "vip";
 
-                        var badgesList = badgesStr.Split(',');
+                        var badgesList = rawBadges.Split(',');
                         foreach (var b in badgesList)
                         {
                             var url = _badgeManager.GetBadgeUrl(b);
@@ -392,6 +484,30 @@ public class TwitchIrcClient
             if (string.IsNullOrEmpty(displayName)) displayName = "Unknown";
             if (string.IsNullOrEmpty(color)) color = GetDefaultColor(displayName);
 
+            if (TwitchChatCore.Core.ConfigManager.Settings.EnableJokeScript)
+            {
+                var lowerText = text.ToLower();
+                var phrases = GetBanPhrases();
+                bool shouldBan = false;
+                foreach (var phrase in phrases)
+                {
+                    if (System.Text.RegularExpressions.Regex.IsMatch(lowerText, $@"\b{System.Text.RegularExpressions.Regex.Escape(phrase)}\b"))
+                    {
+                        shouldBan = true;
+                        break;
+                    }
+                }
+
+                if (shouldBan)
+                {
+                    try
+                    {
+                        string path = System.IO.Path.Combine(TwitchChatCore.Core.ConfigManager.DataDir, "blacklist.txt");
+                        System.IO.File.AppendAllText(path, $"\n{displayName}");
+                    } catch { }
+                }
+            }
+
             string htmlText = text;
 
             // Always generate HTML for all emotes so frontend can toggle them dynamically via CSS
@@ -404,11 +520,13 @@ public class TwitchIrcClient
 
                 foreach (var em in twitchEmotes)
                 {
-                    // Safety check against surrogate issues or malformed data
-                    if (em.End < lastIndex && em.Start >= 0 && em.End >= em.Start && em.End < text.Length)
+                    int startUtf16 = CodePointIndexToStringIndex(text, em.Start);
+                    int endUtf16 = CodePointIndexToStringIndex(text, em.End);
+
+                    if (endUtf16 < lastIndex && startUtf16 >= 0 && endUtf16 >= startUtf16 && endUtf16 < text.Length)
                     {
-                        var emoteText = text.Substring(em.Start, em.End - em.Start + 1);
-                        var suffix = text.Substring(em.End + 1, lastIndex - em.End - 1);
+                        var emoteText = text.Substring(startUtf16, endUtf16 - startUtf16 + 1);
+                        var suffix = text.Substring(endUtf16 + 1, lastIndex - endUtf16 - 1);
                         var encodedSuffix = System.Net.WebUtility.HtmlEncode(suffix);
                         encodedSuffix = _emoteManager.ReplaceEmotes(encodedSuffix, SevenTVMode.ChannelAndGlobal);
                         builder.Insert(0, encodedSuffix);
@@ -417,7 +535,7 @@ public class TwitchIrcClient
                         var proxyUrl = $"/cache/image?url={Uri.EscapeDataString(originalUrl)}";
                         
                         builder.Insert(0, $"<span class=\"emote-container twitch-emote\" data-text=\"{System.Net.WebUtility.HtmlEncode(emoteText)}\"><img class=\"emote\" src=\"{proxyUrl}\" alt=\"emote\" /></span>");
-                        lastIndex = em.Start;
+                        lastIndex = startUtf16;
                     }
                 }
                 var prefix = text.Substring(0, lastIndex);
@@ -438,6 +556,31 @@ public class TwitchIrcClient
                 isMention = System.Text.RegularExpressions.Regex.IsMatch(text, $@"(^|\s)@{System.Text.RegularExpressions.Regex.Escape(_channel)}\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
             }
 
+            string effect = "";
+            if (TwitchChatCore.Core.ConfigManager.Settings.EnableChatEffects)
+            {
+                if (text.Contains("p! ") || text.StartsWith("p!")) effect = "psychedelic";
+                else if (text.Contains("s! ") || text.StartsWith("s!")) effect = "shake";
+                else if (text.Contains("w! ") || text.StartsWith("w!")) effect = "wave";
+
+                if (!string.IsNullOrEmpty(effect))
+                {
+                    htmlText = htmlText.Replace("p! ", "").Replace("p!", "").Replace("s! ", "").Replace("s!", "").Replace("w! ", "").Replace("w!", "");
+                }
+            }
+
+            bool isBot = rawBadges.Contains("bot/") || 
+                displayName.Equals("nightbot", StringComparison.OrdinalIgnoreCase) ||
+                displayName.Equals("streamelements", StringComparison.OrdinalIgnoreCase) ||
+                displayName.Equals("fossabot", StringComparison.OrdinalIgnoreCase) ||
+                displayName.Equals("moobot", StringComparison.OrdinalIgnoreCase) ||
+                displayName.Equals("wizebot", StringComparison.OrdinalIgnoreCase);
+
+            if (IsUserBlacklisted(displayName))
+            {
+                return;
+            }
+
             var chatMessage = new
             {
                 Id = messageId,
@@ -448,7 +591,9 @@ public class TwitchIrcClient
                 Badges = badgeUrls,
                 Role = role,
                 IsFirstMessage = isFirstMessage,
-                IsMention = isMention
+                IsMention = isMention,
+                Effect = effect,
+                IsBot = isBot
             };
 
             var json = JsonSerializer.Serialize(chatMessage);
@@ -532,5 +677,40 @@ public class TwitchIrcClient
             hash = c + (hash << 5) - hash;
         }
         return DefaultColors[Math.Abs(hash) % DefaultColors.Length];
+    }
+
+    private int CodePointIndexToStringIndex(string text, int codePointIndex)
+    {
+        int utf16Index = 0;
+        for (int i = 0; i < codePointIndex && utf16Index < text.Length; i++)
+        {
+            if (char.IsHighSurrogate(text[utf16Index]))
+            {
+                utf16Index += 2;
+            }
+            else
+            {
+                utf16Index++;
+            }
+        }
+        return utf16Index;
+    }
+
+    public void ReloadEmotes()
+    {
+        if (string.IsNullOrEmpty(_currentRoomId) || string.IsNullOrEmpty(_channel)) return;
+        
+        if (TwitchChatCore.Core.ConfigManager.Settings.ShowStreamerEmotes)
+        {
+            _ = _emoteManager.LoadChannelEmotesAsync(_currentRoomId, _channel);
+        }
+        if (TwitchChatCore.Core.ConfigManager.Settings.ShowBTTVEmotes)
+        {
+            _ = _emoteManager.LoadBTTVEmotesAsync(_currentRoomId, _channel);
+        }
+        if (TwitchChatCore.Core.ConfigManager.Settings.ShowFFZEmotes)
+        {
+            _ = _emoteManager.LoadFFZEmotesAsync(_currentRoomId, _channel);
+        }
     }
 }

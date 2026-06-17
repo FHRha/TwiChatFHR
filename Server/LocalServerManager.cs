@@ -132,6 +132,21 @@ public class LocalServerManager
             }
         });
 
+        // Map favicon
+        _app.MapGet("/favicon.ico", async context =>
+        {
+            var faviconPath = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "Server", "Resources", "favicon.ico");
+            if (File.Exists(faviconPath))
+            {
+                context.Response.ContentType = "image/x-icon";
+                await context.Response.SendFileAsync(faviconPath);
+            }
+            else
+            {
+                context.Response.StatusCode = 404;
+            }
+        });
+
         // Start the app without blocking
         await _app.StartAsync(cancellationToken);
 

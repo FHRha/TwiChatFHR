@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="600"
+        Width="700" Height="600"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Icon="avares://TwiChatUpdater/Assets/app_main.png"
+        Background="#0F172A"
+        RequestedThemeVariant="Dark"
+        x:Class="TwiChatUpdater.MainWindow"
+        Title="TwiChat Updater">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,20">
+            <TextBlock Text="Обновление TwiChatFHR" FontSize="24" FontWeight="Bold" Foreground="#F8FAFC" />
+            <TextBlock Text="Выберите версию для установки:" Foreground="#CBD5E1" />
+            <ComboBox Name="VersionComboBox" HorizontalAlignment="Stretch" SelectionChanged="VersionComboBox_SelectionChanged" />
+        </StackPanel>
+        
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="8" Padding="15">
+            <ScrollViewer>
+                <md:MarkdownScrollViewer Name="ChangelogMarkdownViewer" Markdown="" />
+            </ScrollViewer>
+        </Border>
+        
+        <StackPanel Grid.Row="2" Spacing="10" Margin="0,20,0,0">
+            <ProgressBar Name="UpdateProgressBar" IsVisible="False" Minimum="0" Maximum="100" />
+            <TextBlock Name="StatusTextBlock" Foreground="#94A3B8" HorizontalAlignment="Center" />
+            <Button Name="UpdateButton" Content="Обновить" Click="UpdateButton_Click" Background="#3B82F6" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="10" CornerRadius="4">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="#2563EB"/>
+                    </Style>
+                </Button.Styles>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

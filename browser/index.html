@@ -218,12 +218,57 @@
             animation: crumble 0.6s ease forwards !important;
             overflow: hidden;
         }
+        }
         @keyframes crumble {
             0% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0px); max-height: 200px; margin-bottom: 0; }
             40% { opacity: 0; transform: scale(0.8) translateY(10px) rotate(2deg); filter: blur(4px); max-height: 200px; margin-bottom: 0; }
             70% { opacity: 0; transform: scale(0); max-height: 0; margin-bottom: -15px; margin-top: 0; padding-top: 0; padding-bottom: 0; border: 0; }
             100% { opacity: 0; transform: scale(0); max-height: 0; margin-bottom: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; border: 0; }
         }
+
+        /* --- Message Effects (Chat Commands) --- */
+        @keyframes psychedelicRainbow {
+            0% { filter: hue-rotate(0deg) contrast(1.2) saturate(2); }
+            50% { filter: hue-rotate(180deg) contrast(1.5) saturate(3); }
+            100% { filter: hue-rotate(360deg) contrast(1.2) saturate(2); }
+        }
+        .msg-effect-psychedelic {
+            animation: psychedelicRainbow 1s linear infinite !important;
+        }
+
+        @keyframes shakeEffect {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .msg-effect-shake {
+            animation: shakeEffect 0.3s infinite !important;
+            display: inline-block !important;
+        }
+
+        @keyframes waveEffect {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-3px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(3px); }
+        }
+        .msg-effect-wave {
+            animation: waveEffect 1s ease-in-out infinite !important;
+            display: inline-block !important;
+        }
+
+        /* --- Hide Messages Dynamically --- */
+        body.hide-bot-messages .chat-message.role-bot { display: none !important; }
+        body.hide-mod-messages .chat-message.role-mod { display: none !important; }
+        body.hide-vip-messages .chat-message.role-vip { display: none !important; }
 
         /* --- Border Styles --- */
         body.border-neon {
