@@ -32,7 +32,14 @@ public class ChatHub
             ""TextColor"": ""{TwitchChatCore.Core.ConfigManager.Settings.CustomTextColor}"",
             ""ColorBroadcaster"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorBroadcaster}"",
             ""ColorMod"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorMod}"",
-            ""ColorVip"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorVip}""
+            ""ColorVip"": ""{TwitchChatCore.Core.ConfigManager.Settings.ColorVip}"",
+            ""AnimationType"": ""{TwitchChatCore.Core.ConfigManager.Settings.AnimationType.ToString().ToLower()}"",
+            ""EnableMessageGrouping"": {TwitchChatCore.Core.ConfigManager.Settings.EnableMessageGrouping.ToString().ToLower()},
+            ""HighlightMentions"": {TwitchChatCore.Core.ConfigManager.Settings.HighlightMentions.ToString().ToLower()},
+            ""HighlightFirstMessage"": {TwitchChatCore.Core.ConfigManager.Settings.HighlightFirstMessage.ToString().ToLower()},
+            ""DesignTheme"": ""{TwitchChatCore.Core.ConfigManager.Settings.DesignTheme.ToString().ToLower()}"",
+            ""DesignShape"": ""{TwitchChatCore.Core.ConfigManager.Settings.DesignShape.ToString().ToLower()}"",
+            ""DesignLayout"": ""{TwitchChatCore.Core.ConfigManager.Settings.DesignLayout.ToString().ToLower()}""
         }}";
         var configBytes = Encoding.UTF8.GetBytes(initialConfig);
         await webSocket.SendAsync(new ArraySegment<byte>(configBytes), WebSocketMessageType.Text, true, CancellationToken.None);

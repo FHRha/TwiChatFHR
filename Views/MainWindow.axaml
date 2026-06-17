@@ -13,7 +13,7 @@
         WindowStartupLocation="CenterScreen">
 
     <Grid>
-        <Grid ColumnDefinitions="350, *" Margin="0, 30, 0, 0">
+        <Grid ColumnDefinitions="420, *" Margin="0, 30, 0, 0">
             <!-- Settings Panel -->
             <Border Grid.Column="0" Background="#1E293B" CornerRadius="0,16,16,0" Padding="24,24,4,24">
                 <Grid RowDefinitions="Auto, *">
@@ -67,24 +67,95 @@
 
                             <StackPanel Spacing="6">
                                 <TextBlock Text="{DynamicResource ColorTitleLabel}" FontWeight="SemiBold"/>
-                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto">
+                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto">
                                     <StackPanel Grid.Column="0" Margin="0,0,14,0" Spacing="4">
+                                        <TextBlock Text="{DynamicResource MessageBgColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        <ColorPicker Name="MessageBgColorPicker" ToolTip.Tip="Message Background" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="0,0,14,0" Spacing="4">
                                         <TextBlock Text="{DynamicResource TextColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
                                         <ColorPicker Name="TextColorPicker" ToolTip.Tip="Text Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1" Margin="0,0,14,0" Spacing="4">
+                                    <StackPanel Grid.Column="2" Margin="0,0,14,0" Spacing="4">
                                         <TextBlock Text="{DynamicResource ColorBroadcasterLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
                                         <ColorPicker Name="BroadcasterColorPicker" ToolTip.Tip="Broadcaster Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2" Margin="0,0,14,0" Spacing="4">
+                                    <StackPanel Grid.Column="3" Margin="0,0,14,0" Spacing="4">
                                         <TextBlock Text="{DynamicResource ColorModLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
                                         <ColorPicker Name="ModColorPicker" ToolTip.Tip="Moderator Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="3" Spacing="4">
+                                    <StackPanel Grid.Column="4" Spacing="4">
                                         <TextBlock Text="{DynamicResource ColorVipLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
                                         <ColorPicker Name="VipColorPicker" ToolTip.Tip="VIP Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
                                     </StackPanel>
                                 </Grid>
+                            </StackPanel>
+
+                            <Separator Background="#334155" Margin="0,5" Height="1"/>
+
+                            <TextBlock Text="{DynamicResource PremiumVisualsTitle}" FontWeight="Bold" Foreground="#E2E8F0"/>
+                            
+                            <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto" Margin="0,5,0,5">
+                                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4" Margin="0,0,10,10">
+                                    <TextBlock Text="{DynamicResource PresetLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <ComboBox Name="ThemeComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                        <ComboBoxItem Content="{DynamicResource ThemeGlass}"/>
+                                        <ComboBoxItem Content="{DynamicResource ThemeCyberpunk}"/>
+                                        <ComboBoxItem Content="{DynamicResource ThemeMinimalism}"/>
+                                        <ComboBoxItem Content="{DynamicResource ThemeRetro}"/>
+                                        <ComboBoxItem Content="{DynamicResource ThemeCustom}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" Margin="0,0,0,10">
+                                    <TextBlock Text="{DynamicResource BorderStyleLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <ComboBox Name="BorderStyleComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                        <ComboBoxItem Content="{DynamicResource BorderGlass}"/>
+                                        <ComboBoxItem Content="{DynamicResource BorderNeon}"/>
+                                        <ComboBoxItem Content="{DynamicResource BorderSolid}"/>
+                                        <ComboBoxItem Content="{DynamicResource BorderNone}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,0,10,10">
+                                    <TextBlock Text="{DynamicResource ShapeLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <ComboBox Name="ShapeComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                        <ComboBoxItem Content="{DynamicResource ShapeSquare}"/>
+                                        <ComboBoxItem Content="{DynamicResource ShapeRound}"/>
+                                        <ComboBoxItem Content="{DynamicResource ShapeTail}"/>
+                                        <ComboBoxItem Content="{DynamicResource ShapeNoBorder}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4" Margin="0,0,0,10">
+                                    <TextBlock Text="{DynamicResource LayoutLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <ComboBox Name="LayoutComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                        <ComboBoxItem Content="{DynamicResource LayoutInline}"/>
+                                        <ComboBoxItem Content="{DynamicResource LayoutNickAbove}"/>
+                                        <ComboBoxItem Content="{DynamicResource LayoutColumns}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4" Margin="0,0,10,0">
+                                    <TextBlock Text="{DynamicResource AnimationLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <ComboBox Name="AnimationComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                        <ComboBoxItem Content="{DynamicResource AnimationPop}"/>
+                                        <ComboBoxItem Content="{DynamicResource AnimationSlide}"/>
+                                        <ComboBoxItem Content="{DynamicResource AnimationFade}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Spacing="4" Margin="0,0,0,0">
+                                    <TextBlock Text="{DynamicResource FontLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <ComboBox Name="FontComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                        <ComboBoxItem FontFamily="Outfit" Content="Outfit - Aa Bb Cc"/>
+                                        <ComboBoxItem FontFamily="Roboto" Content="Roboto - Aa Bb Cc"/>
+                                        <ComboBoxItem FontFamily="Courier New" Content="Courier New - Aa Bb Cc"/>
+                                        <ComboBoxItem FontFamily="Comic Sans MS" Content="Comic Sans - Aa Bb Cc"/>
+                                        <ComboBoxItem FontFamily="Impact" Content="Impact - Aa Bb Cc"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Spacing="8" Margin="0,5,0,0">
+                                <CheckBox Name="EnableGroupingCheck" Content="{DynamicResource EnableGroupingCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
+                                <CheckBox Name="HighlightMentionsCheck" Content="{DynamicResource HighlightMentionsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                <CheckBox Name="HighlightFirstMessageCheck" Content="{DynamicResource HighlightFirstMessageCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                             </StackPanel>
 
                             <Separator Background="#334155" Margin="0,5" Height="1"/>
@@ -148,6 +219,15 @@
                 <StackPanel Spacing="6">
                     <TextBlock Text="{DynamicResource TwitchUsernameLabel}" FontWeight="SemiBold"/>
                     <TextBox Name="UsernameTextBox" TextChanged="TextBox_TextChanged" Watermark="e.g. FHRha"/>
+                    
+                    <!-- Hidden Test Mode Panel -->
+                    <StackPanel Name="TestModePanel" IsVisible="False" Spacing="6" Margin="0,5,0,0">
+                        <Border Background="#3B82F6" CornerRadius="4" Padding="6,2">
+                            <TextBlock Text="TEST MODE ACTIVE" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Simulation Speed (ms):" FontSize="12" Foreground="#94A3B8"/>
+                        <Slider Name="TestSpeedSlider" Minimum="100" Maximum="3000" Value="1000" TickFrequency="100" IsSnapToTickEnabled="True" PropertyChanged="TestSpeedSlider_PropertyChanged" />
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Spacing="6">

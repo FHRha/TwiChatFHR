@@ -8,9 +8,16 @@ public enum SevenTVMode
     ChannelAndGlobal
 }
 
+public enum AnimationStyle { Pop, Slide, Fade }
+public enum Theme { Glass, Cyberpunk, Minimal, Retro, Custom }
+public enum MessageShape { Square, Round, Tail, NoBorder }
+public enum MessageBorderStyle { Glass, Neon, Solid, None }
+public enum MessageLayout { Inline, NickAbove, Columns }
+public enum ChatFont { Outfit, Roboto, CourierNew, ComicSans, Impact }
+
 public class AppSettings
 {
-    public string TwitchChannel { get; set; } = "stintik";
+    public string TwitchChannel { get; set; } = "test";
     public int ServerPort { get; set; } = 0; // 0 means auto
     public string CircumventionMethod { get; set; } = "Direct Connection";
     public string ProxyAddress { get; set; } = "127.0.0.1";
@@ -21,6 +28,7 @@ public class AppSettings
     public string CustomWorkerUrl { get; set; } = "";
     
     // UI Design Settings
+    public ChatFont Font { get; set; } = ChatFont.Outfit;
     public int ChatFontSize { get; set; } = 14;
     public double GlassOpacity { get; set; } = 0.45;
     public double MessageSpacing { get; set; } = 4;
@@ -31,9 +39,20 @@ public class AppSettings
     public bool ShowGlobal7TVEmotes { get; set; } = false;
     public bool HideBackground { get; set; } = false;
     public bool HideBadges { get; set; } = false;
-    public bool TextOutline { get; set; } = false;
+    public bool TextOutline { get; set; } = true;
     public bool EnableRoleColors { get; set; } = true;
     
+    // Premium Design Features
+    public AnimationStyle AnimationType { get; set; } = AnimationStyle.Pop;
+    public bool EnableMessageGrouping { get; set; } = true;
+    public bool HighlightMentions { get; set; } = false;
+    public bool HighlightFirstMessage { get; set; } = true;
+    public Theme DesignTheme { get; set; } = Theme.Glass;
+    public MessageShape DesignShape { get; set; } = MessageShape.Round;
+    public MessageBorderStyle BorderStyle { get; set; } = MessageBorderStyle.Glass;
+    public MessageLayout DesignLayout { get; set; } = MessageLayout.Inline;
+
+    public string MessageBgColor { get; set; } = "#141923";
     public string CustomTextColor { get; set; } = "#FFFFFF";
     public string ColorBroadcaster { get; set; } = "#F59E0B";
     public string ColorMod { get; set; } = "#10B981";

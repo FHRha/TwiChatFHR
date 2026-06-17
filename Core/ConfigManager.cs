@@ -6,7 +6,8 @@ namespace TwitchChatCore.Core;
 
 public static class ConfigManager
 {
-    private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+    public static string AppDir => Path.GetDirectoryName(Environment.ProcessPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+    private static readonly string ConfigPath = Path.Combine(AppDir, "config.json");
     
     public static AppSettings Settings { get; private set; } = new AppSettings();
 

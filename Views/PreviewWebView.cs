@@ -18,11 +18,16 @@ public class PreviewWebView : NativeControlHost
             _webView.DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 30, 27, 75);
             
             // Initialization has to happen on the main thread
-            _webView.EnsureCoreWebView2Async().ContinueWith(t => 
+            _ = _webView.EnsureCoreWebView2Async().ContinueWith(async t => 
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => 
+                while (App.LocalServer == null || string.IsNullOrEmpty(App.LocalServer.BaseUrl))
                 {
-                    if (App.LocalServer != null && _webView != null && _webView.CoreWebView2 != null)
+                    await System.Threading.Tasks.Task.Delay(50);
+                }
+
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => 
+                {
+                    if (_webView != null && _webView.CoreWebView2 != null)
                     {
                         _webView.Source = new Uri(App.LocalServer.BaseUrl + "/index.html");
                     }

@@ -17,6 +17,13 @@ public class TwitchIrcClient
     private ClientWebSocket? _webSocket;
     private string _channel = string.Empty;
     private string _currentRoomId = string.Empty;
+    private CancellationTokenSource? _testModeCts;
+    private int _testSpeedMs = 1000;
+
+    public void SetTestSpeed(int ms)
+    {
+        _testSpeedMs = Math.Max(50, ms);
+    }
 
     private static readonly string[] DefaultColors = new[]
     {
@@ -41,6 +48,28 @@ public class TwitchIrcClient
         var oldChannel = _channel;
         _channel = channel.ToLower();
 
+        if (_channel == "test")
+        {
+            if (_webSocket != null && _webSocket.State == WebSocketState.Open)
+            {
+                _ = SendAsync($"PART #{oldChannel}");
+                _webSocket.Abort();
+                _webSocket.Dispose();
+                _webSocket = null;
+            }
+            StartTestSimulator();
+            return;
+        }
+        else
+        {
+            if (oldChannel == "test")
+            {
+                _testModeCts?.Cancel();
+                _ = ConnectAsync();
+                return;
+            }
+        }
+
         if (_webSocket != null && _webSocket.State == WebSocketState.Open)
         {
             _ = SendAsync($"PART #{oldChannel}");
@@ -57,7 +86,13 @@ public class TwitchIrcClient
         try
         {
             if (string.IsNullOrWhiteSpace(_channel))
-                _channel = "stintik";
+                _channel = "test";
+
+            if (_channel == "test")
+            {
+                StartTestSimulator();
+                return;
+            }
 
             _ = Task.Run(async () => 
             {
@@ -88,6 +123,97 @@ public class TwitchIrcClient
             Console.WriteLine($"Twitch IRC Connection Error: {ex.Message}");
             // Optional: Reconnection logic
         }
+    }
+
+    private void StartTestSimulator()
+    {
+        _testModeCts?.Cancel();
+        _testModeCts = new CancellationTokenSource();
+        var token = _testModeCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            Console.WriteLine("TwitchIrcClient: Test Simulator Started");
+            int msgIndex = 0;
+            var testUsers = new[] { "Viewer1", "ModMan", "BroadcasterTest", "Viewer1", "VipUser", "Newbie" };
+            
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(_testSpeedMs, token);
+                if (token.IsCancellationRequested) break;
+
+                string user = testUsers[msgIndex % testUsers.Length];
+                string color = GetDefaultColor(user);
+                string text = $"This is test message #{msgIndex}.";
+                string htmlText = text;
+                string role = "none";
+                bool isFirstMessage = false;
+                bool isMention = false;
+                var badges = new System.Collections.Generic.List<string>();
+
+                switch (user)
+                {
+                    case "ModMan":
+                        role = "mod";
+                        color = "#10B981";
+                        text = "Please follow the chat rules! kappa";
+                        break;
+                    case "BroadcasterTest":
+                        role = "broadcaster";
+                        color = "#F59E0B";
+                        text = "Welcome to the stream everyone! Thanks for joining!";
+                        break;
+                    case "VipUser":
+                        role = "vip";
+                        color = "#EC4899";
+                        text = "I have a shiny badge.";
+                        break;
+                    case "Newbie":
+                        isFirstMessage = true;
+                        text = "Hello! First time here. Are we playing something fun?";
+                        break;
+                    case "Viewer1":
+                        if (msgIndex % 3 == 0)
+                        {
+                            text = "@test How are you doing today? Just wanted to say hi!";
+                            isMention = true;
+                        }
+                        else
+                        {
+                            text = "LUL LUL LUL Just chatting!";
+                        }
+                        break;
+                }
+
+                if (msgIndex % 7 == 0)
+                {
+                    text = "This is a very long message designed to test the word wrap functionality of the chat overlay. If it does not wrap correctly, it might break the layout. We need to make sure the chat message container correctly handles long strings of text without spaces as well like AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+                }
+
+                isMention = System.Text.RegularExpressions.Regex.IsMatch(text, $@"(^|\s)@test\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                htmlText = System.Net.WebUtility.HtmlEncode(text);
+                htmlText = _emoteManager.ReplaceEmotes(htmlText, SevenTVMode.ChannelAndGlobal);
+
+                var chatMessage = new
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Username = user,
+                    Color = color,
+                    Text = text,
+                    TextHtml = htmlText,
+                    Badges = badges,
+                    Role = role,
+                    IsFirstMessage = isFirstMessage,
+                    IsMention = isMention
+                };
+
+                var json = JsonSerializer.Serialize(chatMessage);
+                await _chatHub.BroadcastMessageAsync(json);
+
+                msgIndex++;
+            }
+        });
     }
 
     private async Task ReceiveLoopAsync()
@@ -158,6 +284,7 @@ public class TwitchIrcClient
             string text = "";
             string messageId = "";
             string role = "none";
+            bool isFirstMessage = false;
             var badgeUrls = new System.Collections.Generic.List<string>();
             var twitchEmotes = new System.Collections.Generic.List<(int Start, int End, string Id)>();
 
@@ -224,6 +351,10 @@ public class TwitchIrcClient
                             }
                         }
                     }
+                    if (tag.StartsWith("first-msg=") && tag.Length > 10)
+                    {
+                        if (tag.Substring(10) == "1") isFirstMessage = true;
+                    }
                 }
 
                 var userStart = line.IndexOf(':', tagsEnd) + 1;
@@ -278,7 +409,9 @@ public class TwitchIrcClient
                     {
                         var emoteText = text.Substring(em.Start, em.End - em.Start + 1);
                         var suffix = text.Substring(em.End + 1, lastIndex - em.End - 1);
-                        builder.Insert(0, System.Net.WebUtility.HtmlEncode(suffix));
+                        var encodedSuffix = System.Net.WebUtility.HtmlEncode(suffix);
+                        encodedSuffix = _emoteManager.ReplaceEmotes(encodedSuffix, SevenTVMode.ChannelAndGlobal);
+                        builder.Insert(0, encodedSuffix);
                         
                         var originalUrl = $"https://static-cdn.jtvnw.net/emoticons/v2/{em.Id}/default/dark/1.0";
                         var proxyUrl = $"/cache/image?url={Uri.EscapeDataString(originalUrl)}";
@@ -288,17 +421,22 @@ public class TwitchIrcClient
                     }
                 }
                 var prefix = text.Substring(0, lastIndex);
-                builder.Insert(0, System.Net.WebUtility.HtmlEncode(prefix));
+                var encodedPrefix = System.Net.WebUtility.HtmlEncode(prefix);
+                encodedPrefix = _emoteManager.ReplaceEmotes(encodedPrefix, SevenTVMode.ChannelAndGlobal);
+                builder.Insert(0, encodedPrefix);
                 htmlText = builder.ToString();
             }
             else
             {
                 htmlText = System.Net.WebUtility.HtmlEncode(text);
+                htmlText = _emoteManager.ReplaceEmotes(htmlText, SevenTVMode.ChannelAndGlobal);
             }
-            
-            // Now apply 7TV emotes over the already built HTML
-            // Always process both channel and global emotes so CSS can toggle them
-            htmlText = _emoteManager.ReplaceEmotes(htmlText, SevenTVMode.ChannelAndGlobal);
+
+            bool isMention = false;
+            if (!string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(_channel))
+            {
+                isMention = System.Text.RegularExpressions.Regex.IsMatch(text, $@"(^|\s)@{System.Text.RegularExpressions.Regex.Escape(_channel)}\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            }
 
             var chatMessage = new
             {
@@ -308,7 +446,9 @@ public class TwitchIrcClient
                 Text = text,
                 TextHtml = htmlText,
                 Badges = badgeUrls,
-                Role = role
+                Role = role,
+                IsFirstMessage = isFirstMessage,
+                IsMention = isMention
             };
 
             var json = JsonSerializer.Serialize(chatMessage);

@@ -5,10 +5,14 @@ $outputDir = ".\artifact"
 
 Write-Host "Building $projectName into a single executable..."
 
+Write-Host "Stopping running instances to release file locks..."
+Stop-Process -Name "TwitchChatCore" -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
 # 1. Clean the old artifact directory
 if (Test-Path $outputDir) {
     Write-Host "Removing old artifact directory..."
-    Remove-Item -Recurse -Force $outputDir
+    cmd.exe /c "rmdir /s /q $($outputDir)"
 }
 
 # 2. Run dotnet publish

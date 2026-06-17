@@ -23,7 +23,9 @@ public class LocalServerManager
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        var builder = WebApplication.CreateBuilder();
+        await Task.Run(async () =>
+        {
+            var builder = WebApplication.CreateBuilder();
 
         // Register ChatHub as a singleton
         builder.Services.AddSingleton<ChatHub>();
@@ -62,7 +64,7 @@ public class LocalServerManager
         });
 
         // Setup static files (browser frontend)
-        var browserPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "browser");
+        var browserPath = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "browser");
         if (!Directory.Exists(browserPath))
         {
             Directory.CreateDirectory(browserPath);
@@ -75,7 +77,7 @@ public class LocalServerManager
         });
 
         // Setup static files for local emotes cache
-        var emotesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "emotes");
+        var emotesPath = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "emotes");
         if (!Directory.Exists(emotesPath))
         {
             Directory.CreateDirectory(emotesPath);
@@ -97,7 +99,7 @@ public class LocalServerManager
                 return;
             }
 
-            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "images");
+            var cacheDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "images");
             if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
 
             string ext = ".png";
@@ -143,6 +145,7 @@ public class LocalServerManager
         // Start Twitch Client
         var twitchClient = _app.Services.GetRequiredService<TwitchIrcClient>();
         _ = twitchClient.ConnectAsync();
+        });
     }
 
     public async Task StopAsync()

@@ -15,6 +15,7 @@ namespace TwitchChatCore.Views;
 public partial class MainWindow : Window
 {
     private bool _isInitialized = false;
+    private bool _isUpdatingPreset = false;
 
     public MainWindow()
     {
@@ -32,12 +33,27 @@ public partial class MainWindow : Window
         HideBadgesCheck.IsChecked = ConfigManager.Settings.HideBadges;
         EnableRoleColorsCheck.IsChecked = ConfigManager.Settings.EnableRoleColors;
         TextOutlineCheck.IsChecked = ConfigManager.Settings.TextOutline;
+        
+        ThemeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignTheme;
+        BorderStyleComboBox.SelectedIndex = (int)ConfigManager.Settings.BorderStyle;
+        ShapeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignShape;
+        LayoutComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignLayout;
+        AnimationComboBox.SelectedIndex = (int)ConfigManager.Settings.AnimationType;
+        FontComboBox.SelectedIndex = (int)ConfigManager.Settings.Font;
+        
+        EnableGroupingCheck.IsChecked = ConfigManager.Settings.EnableMessageGrouping;
+        HighlightMentionsCheck.IsChecked = ConfigManager.Settings.HighlightMentions;
+        HighlightFirstMessageCheck.IsChecked = ConfigManager.Settings.HighlightFirstMessage;
 
+        if (Color.TryParse(ConfigManager.Settings.MessageBgColor, out var c0)) MessageBgColorPicker.Color = c0;
         if (Color.TryParse(ConfigManager.Settings.CustomTextColor, out var c1)) TextColorPicker.Color = c1;
         if (Color.TryParse(ConfigManager.Settings.ColorBroadcaster, out var c2)) BroadcasterColorPicker.Color = c2;
         if (Color.TryParse(ConfigManager.Settings.ColorMod, out var c3)) ModColorPicker.Color = c3;
         if (Color.TryParse(ConfigManager.Settings.ColorVip, out var c4)) VipColorPicker.Color = c4;
 
+        if (string.IsNullOrWhiteSpace(ConfigManager.Settings.TwitchChannel)) {
+            ConfigManager.Settings.TwitchChannel = "test";
+        }
         UsernameTextBox.Text = ConfigManager.Settings.TwitchChannel;
         ServerPortTextBox.Text = ConfigManager.Settings.ServerPort.ToString();
         CustomWorkerTextBox.Text = ConfigManager.Settings.CustomWorkerUrl;
@@ -45,15 +61,19 @@ public partial class MainWindow : Window
         if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
         else LangComboBox.SelectedIndex = 1;
 
-        this.Loaded += (s, e) => {
-            if (App.LocalServer != null)
+        this.Loaded += async (s, e) => {
+            while (App.LocalServer == null || string.IsNullOrEmpty(App.LocalServer.BaseUrl))
             {
-                ObsUrlTextBox.Text = App.LocalServer.BaseUrl + "/index.html";
+                await Task.Delay(50);
             }
+            ObsUrlTextBox.Text = App.LocalServer.BaseUrl + "/index.html";
         };
 
         EmoteManager.OnEmoteDownloadProgress += (channel, processed, successful, total, speed) =>
         {
+            // Throttle UI updates to avoid freezing UI with hundreds of events
+            if (processed < total && total > 20 && processed % (total / 20) != 0) return;
+
             Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 EmoteProgressPanel.IsVisible = true;
@@ -132,19 +152,138 @@ public partial class MainWindow : Window
     {
         if (!_isInitialized || e.Property.Name != "Value") return;
         UpdateLabels();
+        SetCustomPreset();
+        CheckAndApplyPresetMatch();
         SaveDesignSettings();
     }
 
     private void DesignCheckBox_Changed(object? sender, RoutedEventArgs e)
     {
-        if (!_isInitialized) return;
+        if (!_isInitialized || _isUpdatingPreset) return;
+        SetCustomPreset();
+        CheckAndApplyPresetMatch();
+        SaveDesignSettings();
+    }
+
+    private void DesignComboBox_Changed(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!_isInitialized || _isUpdatingPreset) return;
+        
+        if (sender == ThemeComboBox)
+        {
+            ApplyPreset((TwitchChatCore.Core.Theme)(ThemeComboBox.SelectedIndex >= 0 ? ThemeComboBox.SelectedIndex : 0));
+        }
+        else
+        {
+            SetCustomPreset();
+            CheckAndApplyPresetMatch();
+        }
         SaveDesignSettings();
     }
 
     private void TextColorPicker_ColorChanged(object? sender, ColorChangedEventArgs e)
     {
-        if (!_isInitialized) return;
+        if (!_isInitialized || _isUpdatingPreset) return;
+        SetCustomPreset();
+        CheckAndApplyPresetMatch();
         SaveDesignSettings();
+    }
+
+    private void SetCustomPreset()
+    {
+        if (!_isInitialized || _isUpdatingPreset) return;
+        _isUpdatingPreset = true;
+        ThemeComboBox.SelectedIndex = (int)TwitchChatCore.Core.Theme.Custom;
+        _isUpdatingPreset = false;
+    }
+
+    private void CheckAndApplyPresetMatch()
+    {
+        if (!_isInitialized || _isUpdatingPreset) return;
+
+        // Check if current settings match any preset exactly
+        var theme = TwitchChatCore.Core.Theme.Custom;
+        var msgBgColorHex = $"#{MessageBgColorPicker.Color.R:X2}{MessageBgColorPicker.Color.G:X2}{MessageBgColorPicker.Color.B:X2}";
+
+        if (OpacitySlider.Value == 45 && BorderStyleComboBox.SelectedIndex == (int)MessageBorderStyle.Glass && ShapeComboBox.SelectedIndex == (int)MessageShape.Round && LayoutComboBox.SelectedIndex == (int)MessageLayout.Inline && TextOutlineCheck.IsChecked == true && HideBackgroundCheck.IsChecked == false && AnimationComboBox.SelectedIndex == (int)AnimationStyle.Pop && FontComboBox.SelectedIndex == (int)ChatFont.Outfit && msgBgColorHex == "#141923")
+        {
+            theme = TwitchChatCore.Core.Theme.Glass;
+        }
+        else if (OpacitySlider.Value == 80 && BorderStyleComboBox.SelectedIndex == (int)MessageBorderStyle.Neon && ShapeComboBox.SelectedIndex == (int)MessageShape.Square && LayoutComboBox.SelectedIndex == (int)MessageLayout.Inline && TextOutlineCheck.IsChecked == false && HideBackgroundCheck.IsChecked == false && AnimationComboBox.SelectedIndex == (int)AnimationStyle.Slide && FontComboBox.SelectedIndex == (int)ChatFont.CourierNew && msgBgColorHex == "#0A0514")
+        {
+            theme = TwitchChatCore.Core.Theme.Cyberpunk;
+        }
+        else if (OpacitySlider.Value == 0 && BorderStyleComboBox.SelectedIndex == (int)MessageBorderStyle.None && ShapeComboBox.SelectedIndex == (int)MessageShape.NoBorder && LayoutComboBox.SelectedIndex == (int)MessageLayout.Inline && TextOutlineCheck.IsChecked == true && HideBackgroundCheck.IsChecked == true && AnimationComboBox.SelectedIndex == (int)AnimationStyle.Fade && FontComboBox.SelectedIndex == (int)ChatFont.Outfit && msgBgColorHex == "#141923")
+        {
+            theme = TwitchChatCore.Core.Theme.Minimal;
+        }
+        else if (OpacitySlider.Value == 100 && BorderStyleComboBox.SelectedIndex == (int)MessageBorderStyle.Solid && ShapeComboBox.SelectedIndex == (int)MessageShape.Square && LayoutComboBox.SelectedIndex == (int)MessageLayout.Inline && TextOutlineCheck.IsChecked == false && HideBackgroundCheck.IsChecked == false && AnimationComboBox.SelectedIndex == (int)AnimationStyle.Pop && FontComboBox.SelectedIndex == (int)ChatFont.ComicSans && msgBgColorHex == "#000080")
+        {
+            theme = TwitchChatCore.Core.Theme.Retro;
+        }
+
+        if (theme != TwitchChatCore.Core.Theme.Custom && ThemeComboBox.SelectedIndex != (int)theme)
+        {
+            _isUpdatingPreset = true;
+            ThemeComboBox.SelectedIndex = (int)theme;
+            _isUpdatingPreset = false;
+        }
+    }
+
+    private void ApplyPreset(TwitchChatCore.Core.Theme theme)
+    {
+        if (theme == TwitchChatCore.Core.Theme.Custom) return;
+        
+        _isUpdatingPreset = true;
+        switch (theme)
+        {
+            case TwitchChatCore.Core.Theme.Glass:
+                OpacitySlider.Value = 45;
+                MessageBgColorPicker.Color = Color.Parse("#141923");
+                BorderStyleComboBox.SelectedIndex = (int)MessageBorderStyle.Glass;
+                ShapeComboBox.SelectedIndex = (int)MessageShape.Round;
+                LayoutComboBox.SelectedIndex = (int)MessageLayout.Inline;
+                TextOutlineCheck.IsChecked = true;
+                HideBackgroundCheck.IsChecked = false;
+                AnimationComboBox.SelectedIndex = (int)AnimationStyle.Pop;
+                FontComboBox.SelectedIndex = (int)ChatFont.Outfit;
+                break;
+            case TwitchChatCore.Core.Theme.Cyberpunk:
+                OpacitySlider.Value = 80;
+                MessageBgColorPicker.Color = Color.Parse("#0A0514");
+                BorderStyleComboBox.SelectedIndex = (int)MessageBorderStyle.Neon;
+                ShapeComboBox.SelectedIndex = (int)MessageShape.Square;
+                LayoutComboBox.SelectedIndex = (int)MessageLayout.Inline;
+                TextOutlineCheck.IsChecked = false;
+                HideBackgroundCheck.IsChecked = false;
+                AnimationComboBox.SelectedIndex = (int)AnimationStyle.Slide;
+                FontComboBox.SelectedIndex = (int)ChatFont.CourierNew;
+                break;
+            case TwitchChatCore.Core.Theme.Minimal:
+                OpacitySlider.Value = 0;
+                MessageBgColorPicker.Color = Color.Parse("#141923");
+                BorderStyleComboBox.SelectedIndex = (int)MessageBorderStyle.None;
+                ShapeComboBox.SelectedIndex = (int)MessageShape.NoBorder;
+                LayoutComboBox.SelectedIndex = (int)MessageLayout.Inline;
+                TextOutlineCheck.IsChecked = true;
+                HideBackgroundCheck.IsChecked = true;
+                AnimationComboBox.SelectedIndex = (int)AnimationStyle.Fade;
+                FontComboBox.SelectedIndex = (int)ChatFont.Outfit;
+                break;
+            case TwitchChatCore.Core.Theme.Retro:
+                OpacitySlider.Value = 100;
+                MessageBgColorPicker.Color = Color.Parse("#000080");
+                BorderStyleComboBox.SelectedIndex = (int)MessageBorderStyle.Solid;
+                ShapeComboBox.SelectedIndex = (int)MessageShape.Square;
+                LayoutComboBox.SelectedIndex = (int)MessageLayout.Inline;
+                TextOutlineCheck.IsChecked = false;
+                HideBackgroundCheck.IsChecked = false;
+                AnimationComboBox.SelectedIndex = (int)AnimationStyle.Pop;
+                FontComboBox.SelectedIndex = (int)ChatFont.ComicSans;
+                break;
+        }
+        _isUpdatingPreset = false;
+        UpdateLabels();
     }
 
     private void SaveDesignSettings()
@@ -161,7 +300,20 @@ public partial class MainWindow : Window
         ConfigManager.Settings.EnableRoleColors = EnableRoleColorsCheck.IsChecked ?? true;
         ConfigManager.Settings.TextOutline = TextOutlineCheck.IsChecked ?? false;
         
+        ConfigManager.Settings.DesignTheme = (TwitchChatCore.Core.Theme)(ThemeComboBox.SelectedIndex >= 0 ? ThemeComboBox.SelectedIndex : 0);
+        ConfigManager.Settings.BorderStyle = (MessageBorderStyle)(BorderStyleComboBox.SelectedIndex >= 0 ? BorderStyleComboBox.SelectedIndex : 0);
+        ConfigManager.Settings.DesignShape = (MessageShape)(ShapeComboBox.SelectedIndex >= 0 ? ShapeComboBox.SelectedIndex : 0);
+        ConfigManager.Settings.DesignLayout = (MessageLayout)(LayoutComboBox.SelectedIndex >= 0 ? LayoutComboBox.SelectedIndex : 0);
+        ConfigManager.Settings.AnimationType = (AnimationStyle)(AnimationComboBox.SelectedIndex >= 0 ? AnimationComboBox.SelectedIndex : 0);
+        ConfigManager.Settings.Font = (ChatFont)(FontComboBox.SelectedIndex >= 0 ? FontComboBox.SelectedIndex : 0);
+        
+        ConfigManager.Settings.EnableMessageGrouping = EnableGroupingCheck.IsChecked ?? true;
+        ConfigManager.Settings.HighlightMentions = HighlightMentionsCheck.IsChecked ?? false;
+        ConfigManager.Settings.HighlightFirstMessage = HighlightFirstMessageCheck.IsChecked ?? true;
+        
         // Save Hex color, ignoring alpha channel for CSS (e.g., #RRGGBB)
+        var cBg = MessageBgColorPicker.Color;
+        ConfigManager.Settings.MessageBgColor = $"#{cBg.R:X2}{cBg.G:X2}{cBg.B:X2}";
         var cText = TextColorPicker.Color;
         ConfigManager.Settings.CustomTextColor = $"#{cText.R:X2}{cText.G:X2}{cText.B:X2}";
         var cBrd = BroadcasterColorPicker.Color;
@@ -171,13 +323,13 @@ public partial class MainWindow : Window
         var cVip = VipColorPicker.Color;
         ConfigManager.Settings.ColorVip = $"#{cVip.R:X2}{cVip.G:X2}{cVip.B:X2}";
         
-        ConfigManager.Save();
+        _ = Task.Run(() => ConfigManager.Save());
         BroadcastDesignUpdate();
     }
 
     private void BroadcastDesignUpdate()
     {
-        if (App.LocalServer != null)
+        if (App.LocalServer?.App != null)
         {
             var chatHub = App.LocalServer.App.Services.GetService(typeof(ChatHub)) as ChatHub;
             if (chatHub != null)
@@ -195,9 +347,19 @@ public partial class MainWindow : Window
                     ""EnableRoleColors"": {ConfigManager.Settings.EnableRoleColors.ToString().ToLower()},
                     ""TextOutline"": {ConfigManager.Settings.TextOutline.ToString().ToLower()},
                     ""TextColor"": ""{ConfigManager.Settings.CustomTextColor}"",
+                    ""MessageBgColor"": ""{ConfigManager.Settings.MessageBgColor}"",
                     ""ColorBroadcaster"": ""{ConfigManager.Settings.ColorBroadcaster}"",
                     ""ColorMod"": ""{ConfigManager.Settings.ColorMod}"",
-                    ""ColorVip"": ""{ConfigManager.Settings.ColorVip}""
+                    ""ColorVip"": ""{ConfigManager.Settings.ColorVip}"",
+                    ""AnimationType"": ""{ConfigManager.Settings.AnimationType.ToString().ToLower()}"",
+                    ""EnableMessageGrouping"": {ConfigManager.Settings.EnableMessageGrouping.ToString().ToLower()},
+                    ""HighlightMentions"": {ConfigManager.Settings.HighlightMentions.ToString().ToLower()},
+                    ""HighlightFirstMessage"": {ConfigManager.Settings.HighlightFirstMessage.ToString().ToLower()},
+                    ""DesignTheme"": ""{ConfigManager.Settings.DesignTheme.ToString().ToLower()}"",
+                    ""BorderStyle"": ""{ConfigManager.Settings.BorderStyle.ToString().ToLower()}"",
+                    ""DesignShape"": ""{ConfigManager.Settings.DesignShape.ToString().ToLower()}"",
+                    ""DesignLayout"": ""{ConfigManager.Settings.DesignLayout.ToString().ToLower()}"",
+                    ""Font"": ""{ConfigManager.Settings.Font.ToString().ToLower()}""
                 }}";
                 _ = chatHub.BroadcastMessageAsync(json);
             }
@@ -220,7 +382,30 @@ public partial class MainWindow : Window
 
     private void TextBox_TextChanged(object? sender, TextChangedEventArgs e)
     {
+        if (TestModePanel != null)
+        {
+            if (UsernameTextBox.Text?.Trim().ToLower() == "test")
+                TestModePanel.IsVisible = true;
+            else
+                TestModePanel.IsVisible = false;
+        }
         SaveTechnicalSettings();
+    }
+
+    private void TestSpeedSlider_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
+    {
+        if (!_isInitialized) return;
+        if (e.Property.Name == "Value")
+        {
+            if (App.LocalServer?.App != null && TestSpeedSlider != null)
+            {
+                var twitchClient = App.LocalServer.App.Services.GetService(typeof(Server.TwitchIrcClient)) as Server.TwitchIrcClient;
+                if (twitchClient != null)
+                {
+                    twitchClient.SetTestSpeed((int)TestSpeedSlider.Value);
+                }
+            }
+        }
     }
 
     private void LangComboBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -229,7 +414,7 @@ public partial class MainWindow : Window
         var lang = LangComboBox.SelectedIndex == 0 ? "ru" : "en";
         ConfigManager.Settings.Language = lang;
         
-        ConfigManager.Save();
+        _ = Task.Run(() => ConfigManager.Save());
         App.LoadLanguage(ConfigManager.Settings.Language);
         SaveTechnicalSettings();
         
@@ -247,11 +432,11 @@ public partial class MainWindow : Window
             ConfigManager.Settings.ServerPort = port;
         }
 
-        ConfigManager.Save();
+        _ = Task.Run(() => ConfigManager.Save());
         TwitchChatCore.Core.NetworkManager.UpdateCustomWorker();
         
         // Tell Twitch IRC Client to switch channel
-        if (App.LocalServer != null)
+        if (App.LocalServer?.App != null)
         {
             var twitchClient = App.LocalServer.App.Services.GetService(typeof(Server.TwitchIrcClient)) as Server.TwitchIrcClient;
             if (twitchClient != null)
@@ -270,7 +455,7 @@ public partial class MainWindow : Window
     private void RetryEmotes_Click(object? sender, RoutedEventArgs e)
     {
         RetryEmotesButton.IsVisible = false;
-        if (App.LocalServer != null)
+        if (App.LocalServer?.App != null)
         {
             var twitchClient = App.LocalServer.App.Services.GetService(typeof(Server.TwitchIrcClient)) as Server.TwitchIrcClient;
             if (twitchClient != null)

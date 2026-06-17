@@ -19,7 +19,7 @@ public class BadgeManager
 
     public async Task LoadGlobalBadgesAsync()
     {
-        var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "metadata");
+        var cacheDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "metadata");
         if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
         var cacheFile = Path.Combine(cacheDir, "global_badges.json");
 
@@ -45,7 +45,7 @@ public class BadgeManager
         {
             try
             {
-                var embeddedFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Server", "Resources", "global_badges.json");
+                var embeddedFile = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "Server", "Resources", "global_badges.json");
                 if (File.Exists(embeddedFile))
                 {
                     var json = await File.ReadAllTextAsync(embeddedFile);
@@ -102,7 +102,7 @@ public class BadgeManager
     {
         try
         {
-            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "metadata");
+            var cacheDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "metadata");
             if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
             var cacheFile = Path.Combine(cacheDir, $"channel_{channelLogin}_badges.json");
 

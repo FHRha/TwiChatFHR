@@ -1,4 +1,7 @@
 const chatContainer = document.getElementById('chat-container');
+let lastUsername = null;
+let lastMessageTime = 0;
+let enableMessageGrouping = true;
 
 function adjustLuminance(hex) {
     if (!hex) return '#FFFFFF';
@@ -27,6 +30,21 @@ function addMessage(data) {
     if (data.Role && data.Role !== 'none') {
         msgElement.classList.add(`role-${data.Role}`);
     }
+
+    if (data.IsMention) {
+        msgElement.classList.add('mention-highlight');
+    }
+
+    let lastMsg = chatContainer.lastElementChild;
+    while (lastMsg && (lastMsg.classList.contains('msg-vanishing') || lastMsg.classList.contains('msg-deleted-crumble'))) {
+        lastMsg = lastMsg.previousElementSibling;
+    }
+
+    if (enableMessageGrouping && lastMsg && lastMsg.dataset.username === data.Username) {
+        msgElement.classList.add('grouped');
+        lastMsg.classList.add('group-parent');
+    }
+    
     
     let badgesHtml = '';
     if (data.Badges && data.Badges.length > 0) {
@@ -39,7 +57,9 @@ function addMessage(data) {
     const userElement = document.createElement('span');
     userElement.className = 'username';
     userElement.style.color = adjustLuminance(data.Color) || '#FFFFFF';
-    userElement.innerHTML = badgesHtml + data.Username + ':';
+    
+    let firstMsgHtml = data.IsFirstMessage ? '<span class="first-message-badge">👋 First Time</span>' : '';
+    userElement.innerHTML = firstMsgHtml + badgesHtml + data.Username + ':';
     
     const textElement = document.createElement('span');
     textElement.className = 'chat-text';
@@ -56,8 +76,38 @@ function addMessage(data) {
     
     window.scrollTo(0, document.body.scrollHeight);
     
-    if (chatContainer.children.length > 50) {
-        chatContainer.removeChild(chatContainer.firstChild);
+    let activeCount = 0;
+    let firstActive = null;
+    let childrenCount = chatContainer.children.length;
+    
+    for (let i = childrenCount - 1; i >= 0; i--) {
+        let c = chatContainer.children[i];
+        if (!c.classList.contains('msg-vanishing') && !c.classList.contains('msg-deleted-crumble')) {
+            activeCount++;
+            firstActive = c; // Will end up being the oldest active message
+        }
+    }
+    
+    if (activeCount > 50 && firstActive) {
+        firstActive.classList.add('msg-vanishing');
+        let removed = false;
+        firstActive.addEventListener('animationend', () => {
+            if (!removed) { removed = true; firstActive.remove(); }
+        });
+        // Fallback for background tabs / hidden OBS sources
+        setTimeout(() => {
+            if (!removed && firstActive.parentNode) { removed = true; firstActive.remove(); }
+        }, 500);
+    }
+    
+    // Absolute DOM limit fail-safe
+    if (chatContainer.children.length > 100) {
+        let diff = chatContainer.children.length - 100;
+        for(let i = 0; i < diff; i++) {
+            if(chatContainer.firstElementChild) {
+                chatContainer.firstElementChild.remove();
+            }
+        }
     }
 }
 
@@ -90,6 +140,24 @@ function connect() {
                 if (data.ColorMod !== undefined) root.style.setProperty('--color-mod', data.ColorMod);
                 if (data.ColorVip !== undefined) root.style.setProperty('--color-vip', data.ColorVip);
                 
+                if (data.MessageBgColor !== undefined) {
+                    let hex = data.MessageBgColor;
+                    if (hex.length === 7) {
+                        let r = parseInt(hex.slice(1, 3), 16);
+                        let g = parseInt(hex.slice(3, 5), 16);
+                        let b = parseInt(hex.slice(5, 7), 16);
+                        root.style.setProperty('--msg-bg-rgb', `${r}, ${g}, ${b}`);
+                    }
+                }
+                
+                if (data.Font !== undefined) {
+                    if (data.Font === 'couriernew') root.style.setProperty('--font-family', "'Courier New', Courier, monospace");
+                    else if (data.Font === 'comicsans') root.style.setProperty('--font-family', "'Comic Sans MS', cursive, sans-serif");
+                    else if (data.Font === 'roboto') root.style.setProperty('--font-family', "'Roboto', sans-serif");
+                    else if (data.Font === 'impact') root.style.setProperty('--font-family', "'Impact', sans-serif");
+                    else root.style.setProperty('--font-family', "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif");
+                }
+                
                 if (data.HideBackground !== undefined) body.classList.toggle('hide-background', data.HideBackground);
                 if (data.HideBadges !== undefined) body.classList.toggle('hide-badges', data.HideBadges);
                 if (data.EnableRoleColors !== undefined) body.classList.toggle('disable-role-colors', !data.EnableRoleColors);
@@ -104,12 +172,36 @@ function connect() {
                 if (data.ShowGlobal7TVEmotes !== undefined) {
                     body.classList.toggle('hide-global-7tv-emotes', !data.ShowGlobal7TVEmotes);
                 }
+                
+                if (data.EnableMessageGrouping !== undefined) enableMessageGrouping = data.EnableMessageGrouping;
+                if (data.HighlightMentions !== undefined) body.classList.toggle('disable-mentions', !data.HighlightMentions);
+                if (data.HighlightFirstMessage !== undefined) body.classList.toggle('disable-first-msg', !data.HighlightFirstMessage);
+                
+                const updatePrefixClass = (prefix, newValue) => {
+                    Array.from(body.classList).filter(c => c.startsWith(prefix)).forEach(c => body.classList.remove(c));
+                    if (newValue) body.classList.add(`${prefix}${newValue}`);
+                };
+                
+                if (data.AnimationType !== undefined) updatePrefixClass('anim-', data.AnimationType);
+                if (data.BorderStyle !== undefined) updatePrefixClass('border-', data.BorderStyle);
+                if (data.DesignShape !== undefined) updatePrefixClass('shape-', data.DesignShape);
+                if (data.DesignLayout !== undefined) updatePrefixClass('layout-', data.DesignLayout);
             } else if (data.Type === 'ClearMessage') {
                 const msg = document.querySelector(`.chat-message[data-id="${data.Id}"]`);
-                if (msg) msg.remove();
+                if (msg) {
+                    msg.classList.add('msg-deleted-crumble');
+                    let removed = false;
+                    msg.addEventListener('animationend', () => { if (!removed) { removed = true; msg.remove(); } });
+                    setTimeout(() => { if (!removed && msg.parentNode) { removed = true; msg.remove(); } }, 1000);
+                }
             } else if (data.Type === 'ClearChat') {
                 if (data.Username) {
-                    document.querySelectorAll(`.chat-message[data-username="${data.Username}"]`).forEach(el => el.remove());
+                    document.querySelectorAll(`.chat-message[data-username="${data.Username}"]`).forEach(el => {
+                        el.classList.add('msg-deleted-crumble');
+                        let removed = false;
+                        el.addEventListener('animationend', () => { if (!removed) { removed = true; el.remove(); } });
+                        setTimeout(() => { if (!removed && el.parentNode) { removed = true; el.remove(); } }, 1000);
+                    });
                 } else {
                     chatContainer.innerHTML = '';
                 }

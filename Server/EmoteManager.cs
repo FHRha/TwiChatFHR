@@ -58,7 +58,7 @@ public class EmoteManager
         {
             await TwitchChatCore.Core.NetworkManager.LoadMirrorsAsync(); // Ensure mirrors are loaded
 
-            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "metadata");
+            var cacheDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "metadata");
             if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
             var cacheFile = Path.Combine(cacheDir, "global_emotes.json");
 
@@ -102,7 +102,7 @@ public class EmoteManager
         {
             await TwitchChatCore.Core.NetworkManager.LoadMirrorsAsync(); // Ensure mirrors are loaded
 
-            var cacheDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "metadata");
+            var cacheDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "metadata");
             if (!Directory.Exists(cacheDir)) Directory.CreateDirectory(cacheDir);
             var cacheFile = Path.Combine(cacheDir, $"channel_{channelName}_emotes.json");
 
@@ -154,7 +154,7 @@ public class EmoteManager
 
     private async Task ParseAndDownloadEmotesAsync(string json, ConcurrentDictionary<string, string> dictionary, string folderName)
     {
-        var emotesDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "emotes", folderName);
+        var emotesDir = Path.Combine(TwitchChatCore.Core.ConfigManager.AppDir, "cache", "emotes", folderName);
         if (!Directory.Exists(emotesDir)) Directory.CreateDirectory(emotesDir);
 
         using var doc = JsonDocument.Parse(json);
@@ -258,18 +258,26 @@ public class EmoteManager
     {
         try
         {
+            if (data == null || data.Length < 4) return data ?? Array.Empty<byte>();
+
+            // Check for common image magic numbers to skip base64 parsing immediately
+            // WebP/RIFF
+            if (data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F') return data;
+            // GIF
+            if (data[0] == 'G' && data[1] == 'I' && data[2] == 'F' && data[3] == '8') return data;
+            // PNG
+            if (data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) return data;
+            // JPEG
+            if (data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF) return data;
+            
+            // Ignore JSON
+            if (data[0] == '{' || data[0] == '[') return data;
+
             string text = System.Text.Encoding.UTF8.GetString(data);
             if (string.IsNullOrWhiteSpace(text)) return data;
-            if (text.TrimStart().StartsWith("{") || text.TrimStart().StartsWith("[")) return data;
 
             byte[] decoded = Convert.FromBase64String(text);
-            if (decoded.Length > 4)
-            {
-                if (decoded[0] == 'R' && decoded[1] == 'I' && decoded[2] == 'F' && decoded[3] == 'F') return decoded;
-                if (decoded[0] == 'G' && decoded[1] == 'I' && decoded[2] == 'F' && decoded[3] == '8') return decoded;
-                if (decoded[0] == 0x89 && decoded[1] == 0x50 && decoded[2] == 0x4E && decoded[3] == 0x47) return decoded;
-            }
-            return decoded; // Return decoded anyway if it's valid base64
+            return decoded;
         }
         catch { }
         return data;
