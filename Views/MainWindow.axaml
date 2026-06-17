@@ -32,71 +32,21 @@
                         </StackPanel>
                     </Border>
 
-                    <ScrollViewer Grid.Row="1">
-                        <StackPanel Spacing="16" Margin="0,0,20,0">
+                    <ScrollViewer Grid.Row="1" Padding="0,0,16,0" Margin="0,0,-8,0">
+                        <StackPanel Spacing="16" Margin="0,0,0,0">
                             <Grid>
                                 <TextBlock Text="{DynamicResource DesignStudio}" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF" />
                                 <Button HorizontalAlignment="Right" Background="Transparent" Foreground="#94A3B8" Click="OpenSettings_Click" Padding="8,4" Cursor="Hand">
                                     <PathIcon Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" Width="20" Height="20" Foreground="#94A3B8"/>
                                 </Button>
                             </Grid>
-                            
-                            <StackPanel Spacing="6" Margin="0,10,0,0">
-                                <Grid>
-                                    <TextBlock Text="{DynamicResource FontSizeLabel}" FontWeight="SemiBold"/>
-                                    <TextBlock Name="FontSizeValText" Text="14px" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
-                                </Grid>
-                                <Slider Name="FontSizeSlider" Minimum="10" Maximum="32" Value="14" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                            <!-- 🌟 Главные настройки -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,5">
+                                <PathIcon Data="M12,2 L15.09,8.26 L22,9.27 L17,14.14 L18.18,21.02 L12,17.77 L5.82,21.02 L7,14.14 L2,9.27 L8.91,8.26 L12,2 Z" Width="16" Height="16" Foreground="#38BDF8"/>
+                                <TextBlock Text="{DynamicResource CategoryMain}" FontSize="16" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
                             </StackPanel>
-
-                            <StackPanel Spacing="6">
-                                <Grid>
-                                    <TextBlock Text="{DynamicResource MessageSpacingLabel}" FontWeight="SemiBold"/>
-                                    <TextBlock Name="SpacingValText" Text="4px" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
-                                </Grid>
-                                <Slider Name="SpacingSlider" Minimum="0" Maximum="24" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
-                            </StackPanel>
-
-                            <StackPanel Spacing="6">
-                                <Grid>
-                                    <TextBlock Text="{DynamicResource GlassOpacityLabel}" FontWeight="SemiBold"/>
-                                    <TextBlock Name="OpacityValText" Text="45%" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
-                                </Grid>
-                                <Slider Name="OpacitySlider" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
-                            </StackPanel>
-
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="{DynamicResource ColorTitleLabel}" FontWeight="SemiBold"/>
-                                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto">
-                                    <StackPanel Grid.Column="0" Margin="0,0,14,0" Spacing="4">
-                                        <TextBlock Text="{DynamicResource MessageBgColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                        <ColorPicker Name="MessageBgColorPicker" ToolTip.Tip="Message Background" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Margin="0,0,14,0" Spacing="4">
-                                        <TextBlock Text="{DynamicResource TextColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                        <ColorPicker Name="TextColorPicker" ToolTip.Tip="Text Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2" Margin="0,0,14,0" Spacing="4">
-                                        <TextBlock Text="{DynamicResource ColorBroadcasterLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                        <ColorPicker Name="BroadcasterColorPicker" ToolTip.Tip="Broadcaster Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="3" Margin="0,0,14,0" Spacing="4">
-                                        <TextBlock Text="{DynamicResource ColorModLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                        <ColorPicker Name="ModColorPicker" ToolTip.Tip="Moderator Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="4" Spacing="4">
-                                        <TextBlock Text="{DynamicResource ColorVipLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                                        <ColorPicker Name="VipColorPicker" ToolTip.Tip="VIP Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
-                                    </StackPanel>
-                                </Grid>
-                            </StackPanel>
-
-                            <Separator Background="#334155" Margin="0,5" Height="1"/>
-
-                            <TextBlock Text="{DynamicResource PremiumVisualsTitle}" FontWeight="Bold" Foreground="#E2E8F0"/>
-                            
-                            <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto" Margin="0,5,0,5">
-                                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4" Margin="0,0,10,10">
+                            <StackPanel Spacing="10" Margin="0,0,0,10">
+                                <StackPanel Spacing="4">
                                     <TextBlock Text="{DynamicResource PresetLabel}" FontSize="12" Foreground="#94A3B8"/>
                                     <ComboBox Name="ThemeComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
                                         <ComboBoxItem Content="{DynamicResource ThemeGlass}"/>
@@ -104,70 +54,191 @@
                                         <ComboBoxItem Content="{DynamicResource ThemeMinimalism}"/>
                                         <ComboBoxItem Content="{DynamicResource ThemeRetro}"/>
                                         <ComboBoxItem Content="{DynamicResource ThemeCustom}"/>
+                                        <ComboBoxItem Name="ComboPreset1" Content="Preset 1"/>
+                                        <ComboBoxItem Name="ComboPreset2" Content="Preset 2"/>
+                                        <ComboBoxItem Name="ComboPreset3" Content="Preset 3"/>
                                     </ComboBox>
                                 </StackPanel>
-                                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" Margin="0,0,0,10">
-                                    <TextBlock Text="{DynamicResource BorderStyleLabel}" FontSize="12" Foreground="#94A3B8"/>
-                                    <ComboBox Name="BorderStyleComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
-                                        <ComboBoxItem Content="{DynamicResource BorderGlass}"/>
-                                        <ComboBoxItem Content="{DynamicResource BorderNeon}"/>
-                                        <ComboBoxItem Content="{DynamicResource BorderSolid}"/>
-                                        <ComboBoxItem Content="{DynamicResource BorderNone}"/>
-                                    </ComboBox>
+                                <Grid ColumnDefinitions="*, *">
+                                    <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,10,0">
+                                        <TextBlock Text="{DynamicResource FontLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                        <ComboBox Name="FontComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                            <ComboBoxItem FontFamily="Outfit" Content="Outfit - Aa Bb Cc"/>
+                                            <ComboBoxItem FontFamily="Roboto" Content="Roboto - Aa Bb Cc"/>
+                                            <ComboBoxItem FontFamily="Courier New" Content="Courier New - Aa Bb Cc"/>
+                                            <ComboBoxItem FontFamily="Comic Sans MS" Content="Comic Sans - Aa Bb Cc"/>
+                                            <ComboBoxItem FontFamily="Impact" Content="Impact - Aa Bb Cc"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Text="{DynamicResource GlobalBgColorLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                        <ColorPicker Name="GlobalBgColorPicker" HorizontalAlignment="Stretch" ColorChanged="TextColorPicker_ColorChanged" IsAlphaEnabled="True" ColorSpectrumShape="Ring" />
+                                    </StackPanel>
+                                </Grid>
+                                
+                                <!-- Custom Presets -->
+                                <StackPanel Spacing="4" Margin="0,5,0,0">
+                                    <TextBlock Text="{DynamicResource CustomPresetsLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                    <StackPanel Spacing="8">
+                                        <!-- Слот 1 -->
+                                        <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                            <TextBox Name="Preset1NameBox" Grid.Column="0" Margin="0,0,5,0" Watermark="{DynamicResource CustomPreset1Placeholder}"/>
+                                            <Button Name="SavePreset1Btn" ToolTip.Tip="Сохранить" Grid.Column="1" Margin="0,0,5,0" Click="SavePreset_Click" Tag="0" Padding="6">
+                                                <PathIcon Data="M17,3H5C3.89,3,3,3.9,3,5V19C3,20.1,3.89,21,5,21H19C20.1,21,21,20.1,21,19V7L17,3Z M12,19C10.34,19,9,17.66,9,16C9,14.34,10.34,13,12,13C13.66,13,15,14.34,15,16C15,17.66,13.66,19,12,19Z M15,9H5V5H15V9Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                            <Button Name="LoadPreset1Btn" ToolTip.Tip="Загрузить" Grid.Column="2" Margin="0,0,5,0" Click="LoadPreset_Click" Tag="0" Padding="6">
+                                                <PathIcon Data="M20,6H12L10,4H4C2.9,4,2,4.9,2,6V18C2,19.1,2.9,20,4,20H20C21.1,20,22,19.1,22,18V8C22,6.9,21.1,6,20,6Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                            <Button Name="ExportPreset1Btn" ToolTip.Tip="Скачать" Grid.Column="3" Click="ExportPreset_Click" Tag="0" Padding="6">
+                                                <PathIcon Data="M19,9H15V3H9V9H5L12,16L19,9Z M5,18V20H19V18H5Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                        </Grid>
+                                        <!-- Слот 2 -->
+                                        <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                            <TextBox Name="Preset2NameBox" Grid.Column="0" Margin="0,0,5,0" Watermark="{DynamicResource CustomPreset2Placeholder}"/>
+                                            <Button Name="SavePreset2Btn" ToolTip.Tip="Сохранить" Grid.Column="1" Margin="0,0,5,0" Click="SavePreset_Click" Tag="1" Padding="6">
+                                                <PathIcon Data="M17,3H5C3.89,3,3,3.9,3,5V19C3,20.1,3.89,21,5,21H19C20.1,21,21,20.1,21,19V7L17,3Z M12,19C10.34,19,9,17.66,9,16C9,14.34,10.34,13,12,13C13.66,13,15,14.34,15,16C15,17.66,13.66,19,12,19Z M15,9H5V5H15V9Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                            <Button Name="LoadPreset2Btn" ToolTip.Tip="Загрузить" Grid.Column="2" Margin="0,0,5,0" Click="LoadPreset_Click" Tag="1" Padding="6">
+                                                <PathIcon Data="M20,6H12L10,4H4C2.9,4,2,4.9,2,6V18C2,19.1,2.9,20,4,20H20C21.1,20,22,19.1,22,18V8C22,6.9,21.1,6,20,6Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                            <Button Name="ExportPreset2Btn" ToolTip.Tip="Скачать" Grid.Column="3" Click="ExportPreset_Click" Tag="1" Padding="6">
+                                                <PathIcon Data="M19,9H15V3H9V9H5L12,16L19,9Z M5,18V20H19V18H5Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                        </Grid>
+                                        <!-- Слот 3 -->
+                                        <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                            <TextBox Name="Preset3NameBox" Grid.Column="0" Margin="0,0,5,0" Watermark="{DynamicResource CustomPreset3Placeholder}"/>
+                                            <Button Name="SavePreset3Btn" ToolTip.Tip="Сохранить" Grid.Column="1" Margin="0,0,5,0" Click="SavePreset_Click" Tag="2" Padding="6">
+                                                <PathIcon Data="M17,3H5C3.89,3,3,3.9,3,5V19C3,20.1,3.89,21,5,21H19C20.1,21,21,20.1,21,19V7L17,3Z M12,19C10.34,19,9,17.66,9,16C9,14.34,10.34,13,12,13C13.66,13,15,14.34,15,16C15,17.66,13.66,19,12,19Z M15,9H5V5H15V9Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                            <Button Name="LoadPreset3Btn" ToolTip.Tip="Загрузить" Grid.Column="2" Margin="0,0,5,0" Click="LoadPreset_Click" Tag="2" Padding="6">
+                                                <PathIcon Data="M20,6H12L10,4H4C2.9,4,2,4.9,2,6V18C2,19.1,2.9,20,4,20H20C21.1,20,22,19.1,22,18V8C22,6.9,21.1,6,20,6Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                            <Button Name="ExportPreset3Btn" ToolTip.Tip="Скачать" Grid.Column="3" Click="ExportPreset_Click" Tag="2" Padding="6">
+                                                <PathIcon Data="M19,9H15V3H9V9H5L12,16L19,9Z M5,18V20H19V18H5Z" Width="14" Height="14" Foreground="#94A3B8"/>
+                                            </Button>
+                                        </Grid>
+                                        <TextBlock Name="ExportStatusText" Text="" Foreground="#10B981" FontSize="11" TextWrapping="Wrap" HorizontalAlignment="Center" IsVisible="False" Margin="0,4,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
-                                <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,0,10,10">
-                                    <TextBlock Text="{DynamicResource ShapeLabel}" FontSize="12" Foreground="#94A3B8"/>
-                                    <ComboBox Name="ShapeComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
-                                        <ComboBoxItem Content="{DynamicResource ShapeSquare}"/>
-                                        <ComboBoxItem Content="{DynamicResource ShapeRound}"/>
-                                        <ComboBoxItem Content="{DynamicResource ShapeTail}"/>
-                                        <ComboBoxItem Content="{DynamicResource ShapeNoBorder}"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4" Margin="0,0,0,10">
-                                    <TextBlock Text="{DynamicResource LayoutLabel}" FontSize="12" Foreground="#94A3B8"/>
-                                    <ComboBox Name="LayoutComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
-                                        <ComboBoxItem Content="{DynamicResource LayoutInline}"/>
-                                        <ComboBoxItem Content="{DynamicResource LayoutNickAbove}"/>
-                                        <ComboBoxItem Content="{DynamicResource LayoutColumns}"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Grid.Row="2" Grid.Column="0" Spacing="4" Margin="0,0,10,0">
-                                    <TextBlock Text="{DynamicResource AnimationLabel}" FontSize="12" Foreground="#94A3B8"/>
-                                    <ComboBox Name="AnimationComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
-                                        <ComboBoxItem Content="{DynamicResource AnimationPop}"/>
-                                        <ComboBoxItem Content="{DynamicResource AnimationSlide}"/>
-                                        <ComboBoxItem Content="{DynamicResource AnimationFade}"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Grid.Row="2" Grid.Column="1" Spacing="4" Margin="0,0,0,0">
-                                    <TextBlock Text="{DynamicResource FontLabel}" FontSize="12" Foreground="#94A3B8"/>
-                                    <ComboBox Name="FontComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
-                                        <ComboBoxItem FontFamily="Outfit" Content="Outfit - Aa Bb Cc"/>
-                                        <ComboBoxItem FontFamily="Roboto" Content="Roboto - Aa Bb Cc"/>
-                                        <ComboBoxItem FontFamily="Courier New" Content="Courier New - Aa Bb Cc"/>
-                                        <ComboBoxItem FontFamily="Comic Sans MS" Content="Comic Sans - Aa Bb Cc"/>
-                                        <ComboBoxItem FontFamily="Impact" Content="Impact - Aa Bb Cc"/>
-                                    </ComboBox>
-                                </StackPanel>
-                            </Grid>
-
-                            <StackPanel Spacing="8" Margin="0,5,0,0">
-                                <CheckBox Name="EnableGroupingCheck" Content="{DynamicResource EnableGroupingCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
-                                <CheckBox Name="HighlightMentionsCheck" Content="{DynamicResource HighlightMentionsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                <CheckBox Name="HighlightFirstMessageCheck" Content="{DynamicResource HighlightFirstMessageCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
                             </StackPanel>
 
                             <Separator Background="#334155" Margin="0,5" Height="1"/>
 
-                            <StackPanel Spacing="8">
-                                <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" />
-                                <CheckBox Name="HideBackgroundCheck" Content="{DynamicResource HideBackgroundCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                <CheckBox Name="HideBadgesCheck" Content="{DynamicResource HideBadgesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                <CheckBox Name="EnableRoleColorsCheck" Content="{DynamicResource EnableRoleColorsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
-                                <CheckBox Name="TextOutlineCheck" Content="{DynamicResource TextOutlineCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                            <!-- 💬 Внешний вид сообщений -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,5">
+                                <PathIcon Data="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z" Width="16" Height="16" Foreground="#38BDF8"/>
+                                <TextBlock Text="{DynamicResource CategoryMessageVisuals}" FontSize="16" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Spacing="10" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto">
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4" Margin="0,0,10,10">
+                                        <TextBlock Text="{DynamicResource BorderStyleLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                        <ComboBox Name="BorderStyleComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                            <ComboBoxItem Content="{DynamicResource BorderGlass}"/>
+                                            <ComboBoxItem Content="{DynamicResource BorderNeon}"/>
+                                            <ComboBoxItem Content="{DynamicResource BorderSolid}"/>
+                                            <ComboBoxItem Content="{DynamicResource BorderNone}"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" Margin="0,0,0,10">
+                                        <TextBlock Text="{DynamicResource ShapeLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                        <ComboBox Name="ShapeComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                            <ComboBoxItem Content="{DynamicResource ShapeSquare}"/>
+                                            <ComboBoxItem Content="{DynamicResource ShapeRound}"/>
+                                            <ComboBoxItem Content="{DynamicResource ShapeTail}"/>
+                                            <ComboBoxItem Content="{DynamicResource ShapeNoBorder}"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4" Margin="0,0,10,0">
+                                        <TextBlock Text="{DynamicResource LayoutLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                        <ComboBox Name="LayoutComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                            <ComboBoxItem Content="{DynamicResource LayoutInline}"/>
+                                            <ComboBoxItem Content="{DynamicResource LayoutNickAbove}"/>
+                                            <ComboBoxItem Content="{DynamicResource LayoutColumns}"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Spacing="4" Margin="0,0,0,0">
+                                        <TextBlock Text="{DynamicResource AnimationLabel}" FontSize="12" Foreground="#94A3B8"/>
+                                        <ComboBox Name="AnimationComboBox" HorizontalAlignment="Stretch" SelectionChanged="DesignComboBox_Changed">
+                                            <ComboBoxItem Content="{DynamicResource AnimationPop}"/>
+                                            <ComboBoxItem Content="{DynamicResource AnimationSlide}"/>
+                                            <ComboBoxItem Content="{DynamicResource AnimationFade}"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                                
+                                <StackPanel Spacing="6" Margin="0,5,0,0">
+                                    <Grid>
+                                        <TextBlock Text="{DynamicResource MessageSpacingLabel}" FontSize="13" Foreground="#E2E8F0"/>
+                                        <TextBlock Name="SpacingValText" Text="4px" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
+                                    </Grid>
+                                    <Slider Name="SpacingSlider" Minimum="0" Maximum="24" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="6">
+                                    <Grid>
+                                        <TextBlock Text="{DynamicResource GlassOpacityLabel}" FontSize="13" Foreground="#E2E8F0"/>
+                                        <TextBlock Name="OpacityValText" Text="45%" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
+                                    </Grid>
+                                    <Slider Name="OpacitySlider" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Separator Background="#334155" Margin="0,5" Height="1"/>
+
+                            <!-- 🎨 Цвета -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,5">
+                                <PathIcon Data="M12,22C6.49,22,2,17.51,2,12S6.49,2,12,2s10,4.49,10,10c0,1.38-1.12,2.5-2.5,2.5h-1.89c-0.31,0-0.59,0.13-0.8,0.33l-0.1,0.1 C16.51,15.13,16.29,15.28,16,15.28c-0.83,0-1.5-0.67-1.5-1.5V13c0-1.66-1.34-3-3-3h-2c-1.66,0-3,1.34-3,3s1.34,3,3,3h4.5 c1.66,0,3,1.34,3,3s-1.34,3-3,3H12z M6.5,10C7.33,10,8,9.33,8,8.5S7.33,7,6.5,7S5,7.67,5,8.5S5.67,10,6.5,10z M9.5,6C10.33,6,11,5.33,11,4.5S10.33,3,9.5,3S8,3.67,8,4.5S8.67,6,9.5,6z M14.5,6C15.33,6,16,5.33,16,4.5S15.33,3,14.5,3S13,3.67,13,4.5S13.67,6,14.5,6z M17.5,10c0.83,0,1.5-0.67,1.5-1.5S18.33,7,17.5,7S16,7.67,16,8.5S16.67,10,17.5,10z" Width="16" Height="16" Foreground="#38BDF8"/>
+                                <TextBlock Text="{DynamicResource CategoryColors}" FontSize="16" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Spacing="6" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="Auto, Auto">
+                                    <!-- Подписи -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource MessageBgColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{DynamicResource TextColorLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{DynamicResource ColorBroadcasterLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{DynamicResource ColorModLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{DynamicResource ColorVipLabel}" FontSize="11" Foreground="#94A3B8" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
+                                    
+                                    <!-- Выбор цвета -->
+                                    <ColorPicker Grid.Row="1" Grid.Column="0" Name="MessageBgColorPicker" ToolTip.Tip="Message Background" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    <ColorPicker Grid.Row="1" Grid.Column="1" Name="TextColorPicker" ToolTip.Tip="Text Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    <ColorPicker Grid.Row="1" Grid.Column="2" Name="BroadcasterColorPicker" ToolTip.Tip="Broadcaster Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    <ColorPicker Grid.Row="1" Grid.Column="3" Name="ModColorPicker" ToolTip.Tip="Moderator Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                    <ColorPicker Grid.Row="1" Grid.Column="4" Name="VipColorPicker" ToolTip.Tip="VIP Color" ColorChanged="TextColorPicker_ColorChanged" HorizontalAlignment="Center" IsAlphaEnabled="False" ColorSpectrumShape="Ring" />
+                                </Grid>
+                            </StackPanel>
+
+                            <Separator Background="#334155" Margin="0,5" Height="1"/>
+
+                            <!-- ⚙️ Дополнительно -->
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,5,0,5">
+                                <PathIcon Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" Width="16" Height="16" Foreground="#38BDF8"/>
+                                <TextBlock Text="{DynamicResource CategoryExtra}" FontSize="16" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Spacing="6" Margin="0,0,0,10">
+                                <StackPanel Spacing="6">
+                                    <Grid>
+                                        <TextBlock Text="{DynamicResource FontSizeLabel}" FontSize="13" Foreground="#E2E8F0"/>
+                                        <TextBlock Name="FontSizeValText" Text="14px" HorizontalAlignment="Right" Foreground="#94A3B8" FontSize="12"/>
+                                    </Grid>
+                                    <Slider Name="FontSizeSlider" Minimum="10" Maximum="32" Value="14" TickFrequency="1" IsSnapToTickEnabled="True" PropertyChanged="DesignSlider_PropertyChanged" />
+                                </StackPanel>
+                                
+                                <StackPanel Spacing="8" Margin="0,10,0,0">
+                                    <CheckBox Name="EnableGroupingCheck" Content="{DynamicResource EnableGroupingCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed"/>
+                                    <CheckBox Name="HighlightMentionsCheck" Content="{DynamicResource HighlightMentionsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="HighlightFirstMessageCheck" Content="{DynamicResource HighlightFirstMessageCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="StreamerEmotesCheck" Content="{DynamicResource StreamerEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="GlobalEmotesCheck" Content="{DynamicResource GlobalEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="Global7TVEmotesCheck" Content="{DynamicResource Global7TVEmotesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="HideBackgroundCheck" Content="{DynamicResource HideBackgroundCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="HideBadgesCheck" Content="{DynamicResource HideBadgesCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="EnableRoleColorsCheck" Content="{DynamicResource EnableRoleColorsCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                    <CheckBox Name="TextOutlineCheck" Content="{DynamicResource TextOutlineCheck}" Checked="DesignCheckBox_Changed" Unchecked="DesignCheckBox_Changed" Margin="0,-5"/>
+                                </StackPanel>
                             </StackPanel>
 
                             <Separator Background="#334155" Margin="0,5" Height="1"/>

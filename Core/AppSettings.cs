@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace TwitchChatCore.Core;
 
 public enum SevenTVMode
@@ -9,14 +11,47 @@ public enum SevenTVMode
 }
 
 public enum AnimationStyle { Pop, Slide, Fade }
-public enum Theme { Glass, Cyberpunk, Minimal, Retro, Custom }
+public enum Theme { Glass, Cyberpunk, Minimal, Retro, Custom, Custom1, Custom2, Custom3 }
 public enum MessageShape { Square, Round, Tail, NoBorder }
 public enum MessageBorderStyle { Glass, Neon, Solid, None }
 public enum MessageLayout { Inline, NickAbove, Columns }
 public enum ChatFont { Outfit, Roboto, CourierNew, ComicSans, Impact }
 
+public class CustomPreset
+{
+    public bool IsSaved { get; set; } = false;
+    public string Name { get; set; } = "";
+    public ChatFont Font { get; set; } = ChatFont.Outfit;
+    public int ChatFontSize { get; set; } = 14;
+    public double GlassOpacity { get; set; } = 0.45;
+    public double MessageSpacing { get; set; } = 4;
+    public bool HideBackground { get; set; } = false;
+    public bool HideBadges { get; set; } = false;
+    public bool TextOutline { get; set; } = true;
+    public bool EnableRoleColors { get; set; } = true;
+    public AnimationStyle AnimationType { get; set; } = AnimationStyle.Pop;
+    public bool EnableMessageGrouping { get; set; } = true;
+    public MessageShape DesignShape { get; set; } = MessageShape.Round;
+    public MessageBorderStyle BorderStyle { get; set; } = MessageBorderStyle.Glass;
+    public MessageLayout DesignLayout { get; set; } = MessageLayout.Inline;
+
+    public string MessageBgColor { get; set; } = "#141923";
+    public string GlobalBgColor { get; set; } = "#00000000";
+    public string CustomTextColor { get; set; } = "#FFFFFF";
+    public string ColorBroadcaster { get; set; } = "#F59E0B";
+    public string ColorMod { get; set; } = "#10B981";
+    public string ColorVip { get; set; } = "#EC4899";
+}
+
 public class AppSettings
 {
+    public List<CustomPreset> CustomPresets { get; set; } = new List<CustomPreset>
+    {
+        new CustomPreset { Name = "" },
+        new CustomPreset { Name = "" },
+        new CustomPreset { Name = "" }
+    };
+
     public string TwitchChannel { get; set; } = "test";
     public int ServerPort { get; set; } = 0; // 0 means auto
     public string CircumventionMethod { get; set; } = "Direct Connection";
@@ -53,6 +88,7 @@ public class AppSettings
     public MessageLayout DesignLayout { get; set; } = MessageLayout.Inline;
 
     public string MessageBgColor { get; set; } = "#141923";
+    public string GlobalBgColor { get; set; } = "#00000000";
     public string CustomTextColor { get; set; } = "#FFFFFF";
     public string ColorBroadcaster { get; set; } = "#F59E0B";
     public string ColorMod { get; set; } = "#10B981";

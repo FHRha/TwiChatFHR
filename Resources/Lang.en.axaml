@@ -19,6 +19,17 @@
     <sys:String x:Key="HideBackgroundCheck">Hide Background</sys:String>
     <sys:String x:Key="HideBadgesCheck">Hide Badges</sys:String>
     <sys:String x:Key="EnableRoleColorsCheck">Highlight Roles (Mod/VIP)</sys:String>
+    <sys:String x:Key="CategoryMain">Main Settings</sys:String>
+    <sys:String x:Key="CategoryMessageVisuals">Message Visuals</sys:String>
+    <sys:String x:Key="CategoryColors">Colors</sys:String>
+    <sys:String x:Key="CategoryExtra">Extra Settings</sys:String>
+    <sys:String x:Key="CustomPresetsLabel">Custom Presets</sys:String>
+    <sys:String x:Key="PresetExportedText">✓ Preset saved to: </sys:String>
+    <sys:String x:Key="PresetClearedText">✓ Slot cleared</sys:String>
+    <sys:String x:Key="CustomPreset1Placeholder">Custom Style 1</sys:String>
+    <sys:String x:Key="CustomPreset2Placeholder">Custom Style 2</sys:String>
+    <sys:String x:Key="CustomPreset3Placeholder">Custom Style 3</sys:String>
+    <sys:String x:Key="GlobalBgColorLabel">Chat Window Background</sys:String>
     
     <sys:String x:Key="PremiumVisualsTitle">Premium Visuals</sys:String>
     <sys:String x:Key="PresetLabel">Preset</sys:String>

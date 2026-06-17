@@ -21,45 +21,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Load config to UI
-        FontSizeSlider.Value = ConfigManager.Settings.ChatFontSize;
-        SpacingSlider.Value = ConfigManager.Settings.MessageSpacing;
-        OpacitySlider.Value = ConfigManager.Settings.GlassOpacity * 100;
-        
-        StreamerEmotesCheck.IsChecked = ConfigManager.Settings.ShowStreamerEmotes;
-        GlobalEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobalEmotes;
-        Global7TVEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobal7TVEmotes;
-        HideBackgroundCheck.IsChecked = ConfigManager.Settings.HideBackground;
-        HideBadgesCheck.IsChecked = ConfigManager.Settings.HideBadges;
-        EnableRoleColorsCheck.IsChecked = ConfigManager.Settings.EnableRoleColors;
-        TextOutlineCheck.IsChecked = ConfigManager.Settings.TextOutline;
-        
-        ThemeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignTheme;
-        BorderStyleComboBox.SelectedIndex = (int)ConfigManager.Settings.BorderStyle;
-        ShapeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignShape;
-        LayoutComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignLayout;
-        AnimationComboBox.SelectedIndex = (int)ConfigManager.Settings.AnimationType;
-        FontComboBox.SelectedIndex = (int)ConfigManager.Settings.Font;
-        
-        EnableGroupingCheck.IsChecked = ConfigManager.Settings.EnableMessageGrouping;
-        HighlightMentionsCheck.IsChecked = ConfigManager.Settings.HighlightMentions;
-        HighlightFirstMessageCheck.IsChecked = ConfigManager.Settings.HighlightFirstMessage;
+        UpdateUIFromConfig();
 
-        if (Color.TryParse(ConfigManager.Settings.MessageBgColor, out var c0)) MessageBgColorPicker.Color = c0;
-        if (Color.TryParse(ConfigManager.Settings.CustomTextColor, out var c1)) TextColorPicker.Color = c1;
-        if (Color.TryParse(ConfigManager.Settings.ColorBroadcaster, out var c2)) BroadcasterColorPicker.Color = c2;
-        if (Color.TryParse(ConfigManager.Settings.ColorMod, out var c3)) ModColorPicker.Color = c3;
-        if (Color.TryParse(ConfigManager.Settings.ColorVip, out var c4)) VipColorPicker.Color = c4;
-
-        if (string.IsNullOrWhiteSpace(ConfigManager.Settings.TwitchChannel)) {
-            ConfigManager.Settings.TwitchChannel = "test";
-        }
-        UsernameTextBox.Text = ConfigManager.Settings.TwitchChannel;
-        ServerPortTextBox.Text = ConfigManager.Settings.ServerPort.ToString();
-        CustomWorkerTextBox.Text = ConfigManager.Settings.CustomWorkerUrl;
-
-        if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
-        else LangComboBox.SelectedIndex = 1;
+        // Load Preset Names
+        Preset1NameBox.Text = ConfigManager.Settings.CustomPresets.Count > 0 ? ConfigManager.Settings.CustomPresets[0].Name : "";
+        Preset2NameBox.Text = ConfigManager.Settings.CustomPresets.Count > 1 ? ConfigManager.Settings.CustomPresets[1].Name : "";
+        Preset3NameBox.Text = ConfigManager.Settings.CustomPresets.Count > 2 ? ConfigManager.Settings.CustomPresets[2].Name : "";
 
         this.Loaded += async (s, e) => {
             while (App.LocalServer == null || string.IsNullOrEmpty(App.LocalServer.BaseUrl))
@@ -146,6 +113,20 @@ public partial class MainWindow : Window
         FontSizeValText.Text = $"{FontSizeSlider.Value}px";
         SpacingValText.Text = $"{SpacingSlider.Value}px";
         OpacityValText.Text = $"{OpacitySlider.Value}%";
+
+        if (_isInitialized)
+        {
+            bool wasUpdating = _isUpdatingPreset;
+            _isUpdatingPreset = true;
+
+            int themeIdx = ThemeComboBox.SelectedIndex; ThemeComboBox.SelectedIndex = -1; ThemeComboBox.SelectedIndex = themeIdx;
+            int borderIdx = BorderStyleComboBox.SelectedIndex; BorderStyleComboBox.SelectedIndex = -1; BorderStyleComboBox.SelectedIndex = borderIdx;
+            int shapeIdx = ShapeComboBox.SelectedIndex; ShapeComboBox.SelectedIndex = -1; ShapeComboBox.SelectedIndex = shapeIdx;
+            int layoutIdx = LayoutComboBox.SelectedIndex; LayoutComboBox.SelectedIndex = -1; LayoutComboBox.SelectedIndex = layoutIdx;
+            int animIdx = AnimationComboBox.SelectedIndex; AnimationComboBox.SelectedIndex = -1; AnimationComboBox.SelectedIndex = animIdx;
+
+            _isUpdatingPreset = wasUpdating;
+        }
     }
 
     private void DesignSlider_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -168,16 +149,13 @@ public partial class MainWindow : Window
     private void DesignComboBox_Changed(object? sender, SelectionChangedEventArgs e)
     {
         if (!_isInitialized || _isUpdatingPreset) return;
-        
-        if (sender == ThemeComboBox)
-        {
-            ApplyPreset((TwitchChatCore.Core.Theme)(ThemeComboBox.SelectedIndex >= 0 ? ThemeComboBox.SelectedIndex : 0));
-        }
-        else
-        {
-            SetCustomPreset();
-            CheckAndApplyPresetMatch();
-        }
+        TwitchChatCore.Core.Theme selectedTheme = (TwitchChatCore.Core.Theme)ThemeComboBox.SelectedIndex;
+
+        if (selectedTheme == TwitchChatCore.Core.Theme.Custom1) { LoadPreset_Logic(0); return; }
+        if (selectedTheme == TwitchChatCore.Core.Theme.Custom2) { LoadPreset_Logic(1); return; }
+        if (selectedTheme == TwitchChatCore.Core.Theme.Custom3) { LoadPreset_Logic(2); return; }
+
+        ApplyPreset(selectedTheme);
         SaveDesignSettings();
     }
 
@@ -314,6 +292,8 @@ public partial class MainWindow : Window
         // Save Hex color, ignoring alpha channel for CSS (e.g., #RRGGBB)
         var cBg = MessageBgColorPicker.Color;
         ConfigManager.Settings.MessageBgColor = $"#{cBg.R:X2}{cBg.G:X2}{cBg.B:X2}";
+        var cGlobalBgColor = GlobalBgColorPicker.Color;
+        ConfigManager.Settings.GlobalBgColor = $"#{cGlobalBgColor.A:X2}{cGlobalBgColor.R:X2}{cGlobalBgColor.G:X2}{cGlobalBgColor.B:X2}";
         var cText = TextColorPicker.Color;
         ConfigManager.Settings.CustomTextColor = $"#{cText.R:X2}{cText.G:X2}{cText.B:X2}";
         var cBrd = BroadcasterColorPicker.Color;
@@ -348,6 +328,7 @@ public partial class MainWindow : Window
                     ""TextOutline"": {ConfigManager.Settings.TextOutline.ToString().ToLower()},
                     ""TextColor"": ""{ConfigManager.Settings.CustomTextColor}"",
                     ""MessageBgColor"": ""{ConfigManager.Settings.MessageBgColor}"",
+                    ""GlobalBgColor"": ""{ConfigManager.Settings.GlobalBgColor}"",
                     ""ColorBroadcaster"": ""{ConfigManager.Settings.ColorBroadcaster}"",
                     ""ColorMod"": ""{ConfigManager.Settings.ColorMod}"",
                     ""ColorVip"": ""{ConfigManager.Settings.ColorVip}"",
@@ -416,7 +397,6 @@ public partial class MainWindow : Window
         
         _ = Task.Run(() => ConfigManager.Save());
         App.LoadLanguage(ConfigManager.Settings.Language);
-        SaveTechnicalSettings();
         
         UpdateLabels();
     }
@@ -570,6 +550,242 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to open guide: {ex.Message}");
+        }
+    }
+
+    private void UpdateUIFromConfig()
+    {
+        _isUpdatingPreset = true;
+        // Load config to UI
+        FontSizeSlider.Value = ConfigManager.Settings.ChatFontSize;
+        SpacingSlider.Value = ConfigManager.Settings.MessageSpacing;
+        OpacitySlider.Value = ConfigManager.Settings.GlassOpacity * 100;
+        
+        StreamerEmotesCheck.IsChecked = ConfigManager.Settings.ShowStreamerEmotes;
+        GlobalEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobalEmotes;
+        Global7TVEmotesCheck.IsChecked = ConfigManager.Settings.ShowGlobal7TVEmotes;
+        HideBackgroundCheck.IsChecked = ConfigManager.Settings.HideBackground;
+        HideBadgesCheck.IsChecked = ConfigManager.Settings.HideBadges;
+        EnableRoleColorsCheck.IsChecked = ConfigManager.Settings.EnableRoleColors;
+        TextOutlineCheck.IsChecked = ConfigManager.Settings.TextOutline;
+        
+        ThemeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignTheme;
+        BorderStyleComboBox.SelectedIndex = (int)ConfigManager.Settings.BorderStyle;
+        ShapeComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignShape;
+        LayoutComboBox.SelectedIndex = (int)ConfigManager.Settings.DesignLayout;
+        AnimationComboBox.SelectedIndex = (int)ConfigManager.Settings.AnimationType;
+        FontComboBox.SelectedIndex = (int)ConfigManager.Settings.Font;
+        
+        EnableGroupingCheck.IsChecked = ConfigManager.Settings.EnableMessageGrouping;
+        HighlightMentionsCheck.IsChecked = ConfigManager.Settings.HighlightMentions;
+        HighlightFirstMessageCheck.IsChecked = ConfigManager.Settings.HighlightFirstMessage;
+
+        if (Color.TryParse(ConfigManager.Settings.GlobalBgColor, out var cGlobalBg)) GlobalBgColorPicker.Color = cGlobalBg;
+        if (Color.TryParse(ConfigManager.Settings.MessageBgColor, out var c0)) MessageBgColorPicker.Color = c0;
+        if (Color.TryParse(ConfigManager.Settings.CustomTextColor, out var c1)) TextColorPicker.Color = c1;
+        if (Color.TryParse(ConfigManager.Settings.ColorBroadcaster, out var c2)) BroadcasterColorPicker.Color = c2;
+        if (Color.TryParse(ConfigManager.Settings.ColorMod, out var c3)) ModColorPicker.Color = c3;
+        if (Color.TryParse(ConfigManager.Settings.ColorVip, out var c4)) VipColorPicker.Color = c4;
+
+        if (string.IsNullOrWhiteSpace(ConfigManager.Settings.TwitchChannel)) {
+            ConfigManager.Settings.TwitchChannel = "test";
+        }
+        UsernameTextBox.Text = ConfigManager.Settings.TwitchChannel;
+        ServerPortTextBox.Text = ConfigManager.Settings.ServerPort.ToString();
+        CustomWorkerTextBox.Text = ConfigManager.Settings.CustomWorkerUrl;
+
+        if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
+        else LangComboBox.SelectedIndex = 1;
+
+        if (ConfigManager.Settings.CustomPresets.Count > 0)
+        {
+            var p1 = ConfigManager.Settings.CustomPresets[0];
+            ComboPreset1.Content = p1.Name;
+            LoadPreset1Btn.Opacity = p1.IsSaved ? 1.0 : 0.3; ExportPreset1Btn.Opacity = p1.IsSaved ? 1.0 : 0.3;
+            Preset1NameBox.Text = p1.IsSaved ? p1.Name : "";
+            if (p1.IsSaved && !ThemeComboBox.Items.Contains(ComboPreset1)) ThemeComboBox.Items.Add(ComboPreset1);
+            else if (!p1.IsSaved && ThemeComboBox.Items.Contains(ComboPreset1)) ThemeComboBox.Items.Remove(ComboPreset1);
+        }
+        if (ConfigManager.Settings.CustomPresets.Count > 1)
+        {
+            var p2 = ConfigManager.Settings.CustomPresets[1];
+            ComboPreset2.Content = p2.Name;
+            LoadPreset2Btn.Opacity = p2.IsSaved ? 1.0 : 0.3; ExportPreset2Btn.Opacity = p2.IsSaved ? 1.0 : 0.3;
+            Preset2NameBox.Text = p2.IsSaved ? p2.Name : "";
+            if (p2.IsSaved && !ThemeComboBox.Items.Contains(ComboPreset2)) ThemeComboBox.Items.Add(ComboPreset2);
+            else if (!p2.IsSaved && ThemeComboBox.Items.Contains(ComboPreset2)) ThemeComboBox.Items.Remove(ComboPreset2);
+        }
+        if (ConfigManager.Settings.CustomPresets.Count > 2)
+        {
+            var p3 = ConfigManager.Settings.CustomPresets[2];
+            ComboPreset3.Content = p3.Name;
+            LoadPreset3Btn.Opacity = p3.IsSaved ? 1.0 : 0.3; ExportPreset3Btn.Opacity = p3.IsSaved ? 1.0 : 0.3;
+            Preset3NameBox.Text = p3.IsSaved ? p3.Name : "";
+            if (p3.IsSaved && !ThemeComboBox.Items.Contains(ComboPreset3)) ThemeComboBox.Items.Add(ComboPreset3);
+            else if (!p3.IsSaved && ThemeComboBox.Items.Contains(ComboPreset3)) ThemeComboBox.Items.Remove(ComboPreset3);
+        }
+
+        _isUpdatingPreset = false;
+    }
+
+    private void SavePreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && int.TryParse(btn.Tag?.ToString(), out int index))
+        {
+            if (index < 0 || index >= ConfigManager.Settings.CustomPresets.Count) return;
+            
+            var preset = ConfigManager.Settings.CustomPresets[index];
+            string inputName = index switch {
+                0 => Preset1NameBox.Text ?? "",
+                1 => Preset2NameBox.Text ?? "",
+                _ => Preset3NameBox.Text ?? ""
+            };
+            
+            if (string.IsNullOrWhiteSpace(inputName))
+            {
+                preset.IsSaved = false;
+                preset.Name = "";
+                ConfigManager.Save();
+                UpdateUIFromConfig();
+                
+                ExportStatusText.IsVisible = true;
+                ExportStatusText.Foreground = Avalonia.Media.Brushes.LightGreen;
+                string clearedText = Application.Current!.FindResource("PresetClearedText") as string ?? "✓ Слот очищен";
+                ExportStatusText.Text = clearedText;
+                Task.Delay(3000).ContinueWith(_ => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => {
+                    if (ExportStatusText.Text == clearedText) ExportStatusText.IsVisible = false;
+                }));
+                return;
+            }
+            
+            preset.Name = inputName;
+            preset.IsSaved = true;
+            
+            preset.Font = ConfigManager.Settings.Font;
+            preset.ChatFontSize = ConfigManager.Settings.ChatFontSize;
+            preset.GlassOpacity = ConfigManager.Settings.GlassOpacity;
+            preset.MessageSpacing = ConfigManager.Settings.MessageSpacing;
+            
+            preset.HideBackground = ConfigManager.Settings.HideBackground;
+            preset.HideBadges = ConfigManager.Settings.HideBadges;
+            preset.TextOutline = ConfigManager.Settings.TextOutline;
+            preset.EnableRoleColors = ConfigManager.Settings.EnableRoleColors;
+            
+            preset.AnimationType = ConfigManager.Settings.AnimationType;
+            preset.EnableMessageGrouping = ConfigManager.Settings.EnableMessageGrouping;
+            preset.DesignShape = ConfigManager.Settings.DesignShape;
+            preset.BorderStyle = ConfigManager.Settings.BorderStyle;
+            preset.DesignLayout = ConfigManager.Settings.DesignLayout;
+            
+            preset.MessageBgColor = ConfigManager.Settings.MessageBgColor;
+            preset.GlobalBgColor = ConfigManager.Settings.GlobalBgColor;
+            preset.CustomTextColor = ConfigManager.Settings.CustomTextColor;
+            preset.ColorBroadcaster = ConfigManager.Settings.ColorBroadcaster;
+            preset.ColorMod = ConfigManager.Settings.ColorMod;
+            preset.ColorVip = ConfigManager.Settings.ColorVip;
+            
+            preset.IsSaved = true;
+            
+            ConfigManager.Save();
+            UpdateUIFromConfig();
+            
+            ExportStatusText.IsVisible = true;
+            ExportStatusText.Text = "✓ Пресет сохранен";
+            Task.Delay(3000).ContinueWith(_ => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => {
+                if (ExportStatusText.Text == "✓ Пресет сохранен") ExportStatusText.IsVisible = false;
+            }));
+        }
+    }
+
+    private void LoadPreset_Logic(int index)
+    {
+        if (index < 0 || index >= ConfigManager.Settings.CustomPresets.Count) return;
+        var preset = ConfigManager.Settings.CustomPresets[index];
+        if (!preset.IsSaved) return;
+        
+        ConfigManager.Settings.Font = preset.Font;
+        ConfigManager.Settings.ChatFontSize = preset.ChatFontSize;
+        ConfigManager.Settings.GlassOpacity = preset.GlassOpacity;
+        ConfigManager.Settings.MessageSpacing = preset.MessageSpacing;
+        
+        ConfigManager.Settings.HideBackground = preset.HideBackground;
+        ConfigManager.Settings.HideBadges = preset.HideBadges;
+        ConfigManager.Settings.TextOutline = preset.TextOutline;
+        ConfigManager.Settings.EnableRoleColors = preset.EnableRoleColors;
+        
+        ConfigManager.Settings.AnimationType = preset.AnimationType;
+        ConfigManager.Settings.EnableMessageGrouping = preset.EnableMessageGrouping;
+        ConfigManager.Settings.DesignShape = preset.DesignShape;
+        ConfigManager.Settings.BorderStyle = preset.BorderStyle;
+        ConfigManager.Settings.DesignLayout = preset.DesignLayout;
+        
+        ConfigManager.Settings.MessageBgColor = preset.MessageBgColor;
+        ConfigManager.Settings.GlobalBgColor = preset.GlobalBgColor;
+        ConfigManager.Settings.CustomTextColor = preset.CustomTextColor;
+        ConfigManager.Settings.ColorBroadcaster = preset.ColorBroadcaster;
+        ConfigManager.Settings.ColorMod = preset.ColorMod;
+        ConfigManager.Settings.ColorVip = preset.ColorVip;
+        
+        ConfigManager.Settings.DesignTheme = (TwitchChatCore.Core.Theme)(5 + index); // Custom1, Custom2, Custom3
+        
+        UpdateUIFromConfig();
+        BroadcastDesignUpdate();
+        ConfigManager.Save();
+    }
+
+    private void LoadPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && int.TryParse(btn.Tag?.ToString(), out int index))
+        {
+            if (index < 0 || index >= ConfigManager.Settings.CustomPresets.Count) return;
+            if (!ConfigManager.Settings.CustomPresets[index].IsSaved) return;
+            
+            LoadPreset_Logic(index);
+            
+            ExportStatusText.IsVisible = true;
+            ExportStatusText.Text = "✓ Пресет загружен";
+            Task.Delay(3000).ContinueWith(_ => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => {
+                if (ExportStatusText.Text == "✓ Пресет загружен") ExportStatusText.IsVisible = false;
+            }));
+        }
+    }
+
+    private void ExportPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && int.TryParse(btn.Tag?.ToString(), out int index))
+        {
+            if (index < 0 || index >= ConfigManager.Settings.CustomPresets.Count) return;
+            var preset = ConfigManager.Settings.CustomPresets[index];
+            if (!preset.IsSaved) return;
+            
+            try
+            {
+                string json = System.Text.Json.JsonSerializer.Serialize(preset, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                string validFilename = string.Join("_", preset.Name.Split(System.IO.Path.GetInvalidFileNameChars()));
+                if (string.IsNullOrWhiteSpace(validFilename)) validFilename = $"Preset_{index}";
+                
+                string docsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+                string exportFolder = System.IO.Path.Combine(docsPath, "TwiChatFHR_Presets");
+                if (!System.IO.Directory.Exists(exportFolder)) System.IO.Directory.CreateDirectory(exportFolder);
+                
+                string filePath = System.IO.Path.Combine(exportFolder, validFilename + ".json");
+                System.IO.File.WriteAllText(filePath, json);
+                
+                ExportStatusText.IsVisible = true;
+                ExportStatusText.Foreground = Avalonia.Media.Brushes.LightGreen;
+                string prefix = Application.Current!.FindResource("PresetExportedText") as string ?? "Пресет сохранён в: ";
+                ExportStatusText.Text = prefix + filePath;
+            }
+            catch (Exception ex)
+            {
+                ExportStatusText.IsVisible = true;
+                ExportStatusText.Foreground = Avalonia.Media.Brushes.Red;
+                ExportStatusText.Text = "Ошибка экспорта: " + ex.Message;
+                Task.Delay(4000).ContinueWith(_ => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => {
+                    ExportStatusText.IsVisible = false;
+                    ExportStatusText.Foreground = Avalonia.Media.Brushes.LightGreen;
+                }));
+            }
         }
     }
 }

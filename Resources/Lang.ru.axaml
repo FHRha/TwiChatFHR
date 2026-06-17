@@ -19,6 +19,18 @@
     <sys:String x:Key="HideBackgroundCheck">Скрыть задний фон</sys:String>
     <sys:String x:Key="HideBadgesCheck">Скрыть Значки (Badges)</sys:String>
     <sys:String x:Key="EnableRoleColorsCheck">Выделять роли (Модер/VIP)</sys:String>
+    <sys:String x:Key="CategoryMain">Главные настройки</sys:String>
+    <sys:String x:Key="CategoryMessageVisuals">Внешний вид</sys:String>
+    <sys:String x:Key="CategoryColors">Цвета</sys:String>
+    <sys:String x:Key="CategoryExtra">Дополнительно</sys:String>
+    <sys:String x:Key="CustomPresetsLabel">Свои пресеты</sys:String>
+    <sys:String x:Key="PresetExportedText">✓ Пресет сохранён в: </sys:String>
+    <sys:String x:Key="PresetClearedText">✓ Слот очищен</sys:String>
+    
+    <sys:String x:Key="CustomPreset1Placeholder">Свой стиль 1</sys:String>
+    <sys:String x:Key="CustomPreset2Placeholder">Свой стиль 2</sys:String>
+    <sys:String x:Key="CustomPreset3Placeholder">Свой стиль 3</sys:String>
+    <sys:String x:Key="GlobalBgColorLabel">Фон окна чата</sys:String>
     
     <sys:String x:Key="PremiumVisualsTitle">Премиум Визуал</sys:String>
     <sys:String x:Key="PresetLabel">Пресет</sys:String>

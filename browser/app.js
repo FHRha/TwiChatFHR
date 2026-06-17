@@ -150,6 +150,17 @@ function connect() {
                     }
                 }
                 
+                if (data.GlobalBgColor !== undefined) {
+                    let hex = data.GlobalBgColor;
+                    if (hex.length === 9) {
+                        let a = parseInt(hex.slice(1, 3), 16) / 255;
+                        let r = parseInt(hex.slice(3, 5), 16);
+                        let g = parseInt(hex.slice(5, 7), 16);
+                        let b = parseInt(hex.slice(7, 9), 16);
+                        root.style.setProperty('--global-bg', `rgba(${r}, ${g}, ${b}, ${a})`);
+                    }
+                }
+                
                 if (data.Font !== undefined) {
                     if (data.Font === 'couriernew') root.style.setProperty('--font-family', "'Courier New', Courier, monospace");
                     else if (data.Font === 'comicsans') root.style.setProperty('--font-family', "'Comic Sans MS', cursive, sans-serif");
