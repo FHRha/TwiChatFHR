@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Channels;
 using TwitchChatCore.Core;
 
 namespace TwitchChatCore.Server;
@@ -167,6 +168,8 @@ public class TwitchIrcClient
     }
 
     private CancellationTokenSource? _pingCts;
+    // Decouples IRC line reading from async parsing — prevents burst/pause pattern
+    private Channel<string>? _lineChannel;
 
     public async Task ReconnectAsync()
     {
@@ -231,7 +234,16 @@ public class TwitchIrcClient
             _pingCts = new CancellationTokenSource();
             _ = PingLoopAsync(_pingCts.Token);
 
+            // Create a fresh bounded channel for this connection session
+            _lineChannel = Channel.CreateBounded<string>(new BoundedChannelOptions(2000)
+            {
+                FullMode = BoundedChannelFullMode.DropOldest,
+                SingleReader = true,
+                SingleWriter = true
+            });
+
             _ = ReceiveLoopAsync(_pingCts.Token);
+            _ = ProcessingLoopAsync(_pingCts.Token);
         }
         catch (Exception ex)
         {
@@ -357,7 +369,8 @@ public class TwitchIrcClient
 
     private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
     {
-        var buffer = new byte[8192];
+        // Large buffer to absorb bursts — active chats send many messages per TCP packet
+        var buffer = new byte[32768];
         var stringBuilder = new StringBuilder();
 
         try
@@ -366,51 +379,36 @@ public class TwitchIrcClient
             {
                 var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 if (result.MessageType == WebSocketMessageType.Close)
-                {
                     break;
-                }
 
-                var chunk = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                TwitchChatCore.Core.Logger.Log($"[RAW RECEIVE] {chunk}");
-                stringBuilder.Append(chunk);
+                stringBuilder.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
 
                 var message = stringBuilder.ToString();
-                if (message.Contains("\r\n"))
-                {
-                    var lines = message.Split(new[] { "\r\n" }, StringSplitOptions.None);
-                    // The last item might be incomplete (if it doesn't end with \r\n)
-                    for (int i = 0; i < lines.Length - 1; i++)
-                    {
-                        var line = lines[i];
-                        if (string.IsNullOrWhiteSpace(line)) continue;
+                if (!message.Contains("\r\n")) continue;
 
-                        if (line.StartsWith("PING"))
-                        {
-                            await SendAsync("PONG :tmi.twitch.tv");
-                        }
-                        else if (line.Contains(" PRIVMSG "))
-                        {
-                            await ParseAndBroadcastMessageAsync(line);
-                        }
-                        else if (line.Contains(" CLEARMSG "))
-                        {
-                            await HandleClearMsgAsync(line);
-                        }
-                        else if (line.Contains(" CLEARCHAT "))
-                        {
-                            await HandleClearChatAsync(line);
-                        }
+                var lines = message.Split(new[] { "\r\n" }, StringSplitOptions.None);
+                for (int i = 0; i < lines.Length - 1; i++)
+                {
+                    var line = lines[i];
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    // PING must be handled immediately in the receive loop (latency-sensitive)
+                    if (line.StartsWith("PING"))
+                    {
+                        await SendAsync("PONG :tmi.twitch.tv");
+                        continue;
                     }
 
-                    // Keep the last incomplete part in the builder
-                    stringBuilder.Clear();
-                    stringBuilder.Append(lines[lines.Length - 1]);
+                    // All other lines go to the processing channel — non-blocking
+                    _lineChannel?.Writer.TryWrite(line);
                 }
+
+                stringBuilder.Clear();
+                stringBuilder.Append(lines[lines.Length - 1]);
             }
         }
         catch (OperationCanceledException)
         {
-            // Intentional disconnect — do NOT reconnect
             TwitchChatCore.Core.Logger.Log("TwitchIrcClient: ReceiveLoop cancelled (intentional disconnect).");
             return;
         }
@@ -421,9 +419,33 @@ public class TwitchIrcClient
         }
         finally
         {
-            // Only reconnect if this wasn't an intentional shutdown
+            _lineChannel?.Writer.TryComplete();
             if (!cancellationToken.IsCancellationRequested)
                 ScheduleReconnect();
+        }
+    }
+
+    // Reads IRC lines from the channel and processes them asynchronously,
+    // fully independent from the WebSocket receive loop.
+    private async Task ProcessingLoopAsync(CancellationToken cancellationToken)
+    {
+        if (_lineChannel == null) return;
+        try
+        {
+            await foreach (var line in _lineChannel.Reader.ReadAllAsync(cancellationToken))
+            {
+                if (line.Contains(" PRIVMSG "))
+                    await ParseAndBroadcastMessageAsync(line);
+                else if (line.Contains(" CLEARMSG "))
+                    await HandleClearMsgAsync(line);
+                else if (line.Contains(" CLEARCHAT "))
+                    await HandleClearChatAsync(line);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            TwitchChatCore.Core.Logger.Log($"ProcessingLoop Error: {ex.Message}");
         }
     }
 
