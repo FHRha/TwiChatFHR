@@ -166,6 +166,28 @@ public class TwitchIrcClient
         _ = _badgeManager.LoadChannelBadgesAsync(_channel);
     }
 
+    public async Task ReconnectAsync()
+    {
+        Disconnect();
+        await ConnectAsync();
+    }
+
+    public void Disconnect()
+    {
+        if (_webSocket != null)
+        {
+            try
+            {
+                if (_webSocket.State == WebSocketState.Open)
+                    _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Settings changed", CancellationToken.None).Wait();
+            }
+            catch { }
+            _webSocket.Dispose();
+            _webSocket = null;
+        }
+        _testModeCts?.Cancel();
+    }
+
     public async Task ConnectAsync()
     {
         try

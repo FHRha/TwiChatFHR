@@ -1025,6 +1025,16 @@ public partial class MainWindow : Window
         EmotesProxyMainPanel.IsVisible = !ConfigManager.Settings.UseTwitchProxyForEmotes;
         
         ConfigManager.Save();
+        TwitchChatCore.Core.NetworkManager.UpdateCustomWorker();
+
+        if (App.LocalServer?.App != null)
+        {
+            var twitchClient = App.LocalServer.App.Services.GetService(typeof(Server.TwitchIrcClient)) as Server.TwitchIrcClient;
+            if (twitchClient != null)
+            {
+                _ = twitchClient.ReconnectAsync();
+            }
+        }
     }
 
     private void ProxyItem_TextChanged(object? sender, global::Avalonia.Controls.TextChangedEventArgs e)

@@ -26,32 +26,37 @@ const server = http.createServer((req, res) => {
             const targetUrlStr = parsedUrl.searchParams.get('url');
 
             if (!PROXY_TOKEN || token !== PROXY_TOKEN) {
+                console.log(`[${new Date().toISOString()}] HTTP Proxy rejected: Unauthorized. Target: ${targetUrlStr}`);
                 res.writeHead(401, { 'Content-Type': 'text/plain' });
                 res.end('Unauthorized');
                 return;
             }
 
             if (!targetUrlStr) {
+                console.log(`[${new Date().toISOString()}] HTTP Proxy rejected: Missing url parameter.`);
                 res.writeHead(400, { 'Content-Type': 'text/plain' });
                 res.end('Missing url parameter');
                 return;
             }
 
+            console.log(`[${new Date().toISOString()}] HTTP Proxying GET request to: ${targetUrlStr}`);
             const targetUrl = new URL(targetUrlStr);
             const client = targetUrl.protocol === 'http:' ? http : https;
 
             client.get(targetUrlStr, (proxyRes) => {
+                console.log(`[${new Date().toISOString()}] HTTP Proxy received ${proxyRes.statusCode} from ${targetUrlStr}`);
                 const headers = { ...proxyRes.headers };
                 headers['Access-Control-Allow-Origin'] = '*';
                 
                 res.writeHead(proxyRes.statusCode || 200, headers);
                 proxyRes.pipe(res);
             }).on('error', (err) => {
-                console.error(`HTTP Proxy Error for ${targetUrlStr}:`, err.message);
+                console.error(`[${new Date().toISOString()}] HTTP Proxy Error for ${targetUrlStr}:`, err.message);
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
                 res.end('Proxy Error');
             });
         } catch (e) {
+            console.log(`[${new Date().toISOString()}] HTTP Proxy rejected: Invalid Request. Error: ${e.message}`);
             res.writeHead(400, { 'Content-Type': 'text/plain' });
             res.end('Invalid Request');
         }
