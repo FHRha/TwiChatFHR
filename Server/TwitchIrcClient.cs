@@ -178,14 +178,18 @@ public class TwitchIrcClient
     {
         if (_webSocket != null)
         {
+            var ws = _webSocket;
+            _webSocket = null;
             try
             {
-                if (_webSocket.State == WebSocketState.Open)
-                    _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Settings changed", CancellationToken.None).Wait();
+                // Fire-and-forget graceful close — never block the UI thread
+                if (ws.State == WebSocketState.Open)
+                    _ = ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Settings changed", CancellationToken.None)
+                          .ContinueWith(_ => ws.Dispose());
+                else
+                    ws.Dispose();
             }
-            catch { }
-            _webSocket.Dispose();
-            _webSocket = null;
+            catch { ws.Dispose(); }
         }
         _testModeCts?.Cancel();
         _pingCts?.Cancel();

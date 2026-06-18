@@ -1025,6 +1025,7 @@ public partial class MainWindow : Window
         EmotesProxyMainPanel.IsVisible = !ConfigManager.Settings.UseTwitchProxyForEmotes;
         
         ConfigManager.Save();
+        TwitchChatCore.Core.NetworkManager.ResetMirrors();
         TwitchChatCore.Core.NetworkManager.UpdateCustomWorker();
 
         if (App.LocalServer?.App != null)
@@ -1033,6 +1034,7 @@ public partial class MainWindow : Window
             if (twitchClient != null)
             {
                 _ = twitchClient.ReconnectAsync();
+                twitchClient.ReloadEmotes();
             }
         }
     }

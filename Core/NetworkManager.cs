@@ -63,8 +63,14 @@ public static class NetworkManager
         {
             TwitchChatCore.Core.Logger.Log($"Failed to load remote mirrors, using defaults. Error: {ex.Message}");
         }
-        UpdateCustomWorker();
         _mirrorsLoaded = true;
+        UpdateCustomWorker();
+    }
+
+    /// <summary>Reset mirror cache so the next LoadMirrorsAsync call re-applies proxy settings.</summary>
+    public static void ResetMirrors()
+    {
+        _mirrorsLoaded = false;
     }
 
     public static void UpdateCustomWorker()
