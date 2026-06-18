@@ -135,6 +135,27 @@ wss.on('connection', (clientWs, req) => {
 server.listen(PORT, () => {
     console.log(`TwiChatFHR Proxy listening on port ${PORT}`);
     
+    // Fetch and display the commit version of server.js
+    https.get('https://api.github.com/repos/FHRha/TwiChatFHR/commits?path=CloudProxy/server.js&per_page=1', {
+        headers: { 'User-Agent': 'TwiChatFHR-Proxy' }
+    }, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+            try {
+                const commits = JSON.parse(data);
+                if (commits && commits.length > 0) {
+                    const commit = commits[0];
+                    console.log(`[Version] Running latest server.js from commit:`);
+                    console.log(`[Version] "${commit.commit.message}" (${commit.sha.substring(0, 7)})`);
+                    console.log(`[Version] Date: ${commit.commit.author.date}`);
+                }
+            } catch (e) {
+                // ignore
+            }
+        });
+    }).on('error', () => {});
+
     // Auto-detect Hugging Face Spaces URL
     const hfHost = process.env.SPACE_HOST;
     const spaceId = process.env.SPACE_ID;
