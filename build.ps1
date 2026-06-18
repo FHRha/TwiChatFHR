@@ -26,12 +26,24 @@ if (Test-Path $outputDir) {
 
 Write-Host "Publishing Main App..."
 dotnet publish $projectName -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -o $outputDir
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to build Main App!" -ForegroundColor Red
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit $LASTEXITCODE
+}
 
 Write-Host "Publishing Updater..."
 dotnet publish .\TwiChatUpdater\TwiChatUpdater.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -o $outputDir
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Build pipeline completed successfully! Output is in $outputDir" -ForegroundColor Green
-} else {
-    Write-Host "Build failed with exit code $LASTEXITCODE" -ForegroundColor Red
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to build Updater!" -ForegroundColor Red
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit $LASTEXITCODE
 }
+
+Write-Host "Build pipeline completed successfully! Output is in $outputDir" -ForegroundColor Green
+
+Write-Host "Press any key to continue..."
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+

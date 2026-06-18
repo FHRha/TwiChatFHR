@@ -21,12 +21,24 @@ if (Test-Path $outputDir) {
 # It uses the installed .NET runtime on your PC.
 Write-Host "Building Main App..."
 dotnet publish $projectName -c Debug -o $outputDir
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to build Main App!" -ForegroundColor Red
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit $LASTEXITCODE
+}
 
 Write-Host "Building Updater..."
 dotnet publish .\TwiChatUpdater\TwiChatUpdater.csproj -c Debug -o $outputDir
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Dev build completed in seconds! Output is in $outputDir" -ForegroundColor Green
-} else {
-    Write-Host "Build failed with exit code $LASTEXITCODE" -ForegroundColor Red
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to build Updater!" -ForegroundColor Red
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit $LASTEXITCODE
 }
+
+Write-Host "Dev build completed in seconds! Output is in $outputDir" -ForegroundColor Green
+
+
+Write-Host "Press any key to continue..."
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
