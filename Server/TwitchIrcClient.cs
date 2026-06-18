@@ -16,6 +16,7 @@ public class TwitchIrcClient
     private readonly ChatHub _chatHub;
     private readonly BadgeManager _badgeManager;
     private readonly EmoteManager _emoteManager;
+    private readonly TwitchChatManager _chatManager;
     private ClientWebSocket? _webSocket;
     private string _channel = string.Empty;
     private string _currentRoomId = string.Empty;
@@ -34,11 +35,12 @@ public class TwitchIrcClient
         "#5F9EA0", "#1E90FF", "#FF69B4", "#8A2BE2", "#00FF7F"
     };
 
-    public TwitchIrcClient(ChatHub chatHub, BadgeManager badgeManager, EmoteManager emoteManager)
+    public TwitchIrcClient(ChatHub chatHub, BadgeManager badgeManager, EmoteManager emoteManager, TwitchChatManager chatManager)
     {
         _chatHub = chatHub;
         _badgeManager = badgeManager;
         _emoteManager = emoteManager;
+        _chatManager = chatManager;
         _channel = ConfigManager.Settings.TwitchChannel;
     }
 
@@ -187,10 +189,7 @@ public class TwitchIrcClient
                 await Task.WhenAll(t1, t2, t3);
             });
 
-            _webSocket = new ClientWebSocket();
-            // We intentionally do NOT set the proxy here. 
-            // Twitch Chat IRC connection always goes directly for fault tolerance.
-            await _webSocket.ConnectAsync(new Uri("wss://irc-ws.chat.twitch.tv:443"), CancellationToken.None);
+            _webSocket = await _chatManager.ConnectAsync(CancellationToken.None);
             
             await SendAsync("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
             await SendAsync("PASS SCHMOOPIIE");

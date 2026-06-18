@@ -782,6 +782,10 @@ public partial class MainWindow : Window
         UsernameTextBox.Text = ConfigManager.Settings.TwitchChannel;
         ServerPortTextBox.Text = ConfigManager.Settings.ServerPort.ToString();
         CustomWorkerTextBox.Text = ConfigManager.Settings.CustomWorkerUrl;
+        
+        UseTwitchProxySwitch.IsChecked = ConfigManager.Settings.UseTwitchProxy;
+        ProxyListPanel.IsVisible = ConfigManager.Settings.UseTwitchProxy;
+        ProxiesList.ItemsSource = ConfigManager.Settings.CloudProxies;
 
         if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
         else LangComboBox.SelectedIndex = 1;
@@ -995,5 +999,146 @@ public partial class MainWindow : Window
     {
         _realExit = true;
         this.Close();
+    }
+
+    // Twitch Proxy Settings Handlers
+    private void ProxySettings_Changed(object? sender, RoutedEventArgs e)
+    {
+        if (_isUpdatingPreset) return;
+        
+        ConfigManager.Settings.UseTwitchProxy = UseTwitchProxySwitch.IsChecked ?? false;
+        ProxyListPanel.IsVisible = ConfigManager.Settings.UseTwitchProxy;
+        ConfigManager.Save();
+    }
+
+    private void ProxyItem_TextChanged(object? sender, global::Avalonia.Controls.TextChangedEventArgs e)
+    {
+        if (_isUpdatingPreset) return;
+        ConfigManager.Save();
+    }
+
+    private void AddProxy_Click(object? sender, RoutedEventArgs e)
+    {
+        var newProxy = new TwitchChatCore.Core.Models.CloudProxyServer 
+        { 
+            Name = $"Proxy {ConfigManager.Settings.CloudProxies.Count + 1}"
+        };
+        ConfigManager.Settings.CloudProxies.Add(newProxy);
+        ConfigManager.Save();
+        
+        // Refresh UI
+        ProxiesList.ItemsSource = null;
+        ProxiesList.ItemsSource = ConfigManager.Settings.CloudProxies;
+    }
+
+    private void RemoveProxy_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.CommandParameter is TwitchChatCore.Core.Models.CloudProxyServer proxy)
+        {
+            ConfigManager.Settings.CloudProxies.Remove(proxy);
+            ConfigManager.Save();
+            
+            // Refresh UI
+            ProxiesList.ItemsSource = null;
+            ProxiesList.ItemsSource = ConfigManager.Settings.CloudProxies;
+        }
+    }
+
+    private void OpenProxyGuide_Click(object? sender, RoutedEventArgs e)
+    {
+        var html = @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Google Cloud Proxy Guide</title>
+    <style>
+        body { font-family: sans-serif; background: #0F172A; color: #E2E8F0; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+        h1, h2, h3 { color: #FFFFFF; }
+        code { background: #1E293B; padding: 4px 8px; border-radius: 4px; font-family: monospace; color: #38BDF8; }
+        pre { background: #1E293B; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #334155; margin: 0; }
+        pre code { background: transparent; padding: 0; color: #E2E8F0; }
+        .step { background: #1E293B; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; }
+        .highlight { color: #10B981; font-weight: bold; }
+        .copy-wrapper { position: relative; margin: 10px 0; }
+        .copy-btn { position: absolute; top: 12px; right: 12px; background: #334155; color: #E2E8F0; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: all 0.2s; z-index: 10; }
+        .copy-btn:hover { background: #475569; border-color: #64748B; color: #FFFFFF; }
+        .copy-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+</head>
+<body>
+    <h1>Установка собственного Proxy для Twitch Chat</h1>
+    <p>Если провайдер блокирует подключение к чату Twitch (или вы хотите скрыть свой IP), вы можете поднять свой собственный прокси-сервер на базе Google Cloud Run. Это бесплатно и очень просто!</p>
+    
+    <div class='step'>
+        <h2>Шаг 1: Подготовка в Google Cloud</h2>
+        <ol>
+            <li>Зайдите на <a href='https://console.cloud.google.com/' style='color:#3B82F6;' target='_blank'>Google Cloud Console</a>.</li>
+            <li>Нажмите <b>Select a project</b> -> <b>New project</b> и назовите его (например, <b>TwiChat</b>).</li>
+            <li>В уведомлениях справа (значок колокольчика) нажмите на созданный проект и выберите <b>Select project</b>.</li>
+            <li><b>ТОЛЬКО ПОСЛЕ ЭТОГО</b> откройте Cloud Shell (кнопка <b>&gt;_</b> в правом верхнем углу).</li>
+        </ol>
+    </div>
+
+    <div class='step'>
+        <h2>Шаг 2: Выполнение скрипта установки</h2>
+        <ol>
+            <li>Скопируйте скрипт ниже:</li>
+        </ol>
+<div class='copy-wrapper'>
+    <button class='copy-btn' onclick='copyCode(this)' title='Скопировать код'>
+        <svg viewBox='0 0 24 24'><rect x='9' y='9' width='13' height='13' rx='2' ry='2'></rect><path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'></path></svg>
+        <span>Скопировать</span>
+    </button>
+    <pre style='padding-right: 120px;'><code id='deploy-script'>wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/deploy.sh -O deploy.sh && chmod +x deploy.sh && ./deploy.sh</code></pre>
+</div>
+        <ol start='2'>
+            <li>Вставьте его в консоль Google Cloud Shell и нажмите Enter.</li>
+            <li>Дождитесь завершения (около 2 минут). В конце скрипт выдаст вам <b>URL Сервера</b> и <b>Токен</b>.</li>
+        </ol>
+    </div>
+
+    <div class='step'>
+        <h2>Шаг 3: Настройка в приложении</h2>
+        <ol>
+            <li>В приложении TwiChatFHR включите маршрутизацию чата через прокси.</li>
+            <li>Нажмите '+ Добавить прокси'.</li>
+            <li>Вставьте полученные <b>URL Сервера</b> и <b>Токен</b> в соответствующие поля.</li>
+            <li>Готово! Приложение начнет подключаться к чату через ваш собственный прокси.</li>
+        </ol>
+    </div>
+
+    <script>
+        function copyCode(btn) {
+            const code = document.getElementById('deploy-script').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const span = btn.querySelector('span');
+                const originalText = span.innerText;
+                span.innerText = 'Скопировано!';
+                btn.style.background = '#10B981';
+                btn.style.borderColor = '#059669';
+                btn.style.color = '#FFFFFF';
+                setTimeout(() => { 
+                    span.innerText = originalText; 
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>";
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TwiChatFHR_ProxyGuide.html");
+        System.IO.File.WriteAllText(path, html);
+        
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch { }
     }
 }

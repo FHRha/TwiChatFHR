@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using TwitchChatCore.Core.Models;
 
 namespace TwitchChatCore.Core;
 
@@ -62,6 +64,11 @@ public class AppSettings
     public SevenTVMode SevenTVEmotesMode { get; set; } = SevenTVMode.ChannelAndGlobal;
     public string GithubBadgesUrl { get; set; } = "https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/Server/Resources/global_badges.json";
     public string CustomWorkerUrl { get; set; } = "";
+    
+    // Twitch Proxy Settings
+    public bool UseTwitchProxy { get; set; } = false;
+    public List<CloudProxyServer> CloudProxies { get; set; } = new List<CloudProxyServer>();
+    public DateTime LastQuotaResetDate { get; set; } = DateTime.UtcNow;
     
     // UI Design Settings
     public ChatFont Font { get; set; } = ChatFont.Outfit;

@@ -31,6 +31,7 @@ public class LocalServerManager
         builder.Services.AddSingleton<ChatHub>();
         builder.Services.AddSingleton<BadgeManager>();
         builder.Services.AddSingleton<EmoteManager>();
+        builder.Services.AddSingleton<TwitchChatManager>();
         builder.Services.AddSingleton<TwitchIrcClient>();
 
         // We tell Kestrel to use configured port, or 0 for auto

@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:v="using:TwitchChatCore.Views"
         xmlns:s="using:TwitchChatCore.Server"
+        xmlns:models="using:TwitchChatCore.Core.Models"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
         x:Class="TwitchChatCore.Views.MainWindow"
         Title="{DynamicResource MainWindowTitle}"
@@ -364,6 +365,40 @@
                     </Grid>
                     <TextBox Name="CustomWorkerTextBox" TextChanged="TextBox_TextChanged" Watermark="https://..."/>
                     <TextBlock Text="{DynamicResource CustomWorkerHint}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- Twitch Proxy Section -->
+                <StackPanel Spacing="6" Margin="0,5,0,0">
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+                        <TextBlock Grid.Column="0" Text="Twitch Chat Proxy (Google Cloud Run)" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ToggleSwitch Grid.Column="1" Name="UseTwitchProxySwitch" IsChecked="False" Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
+                    </Grid>
+                    <TextBlock Text="Маршрутизировать трафик Twitch чата через прокси-сервер (помогает от блокировок и скрывает IP-адрес)." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,-4,0,4"/>
+                    
+                    <StackPanel Name="ProxyListPanel" IsVisible="False" Spacing="8">
+                        <Button Content="+ Добавить прокси" Click="AddProxy_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Background="#0F172A" Foreground="#38BDF8" CornerRadius="8"/>
+                        <ItemsControl Name="ProxiesList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:CloudProxyServer">
+                                    <Border Background="#0F172A" CornerRadius="8" Padding="12" Margin="0,0,0,8" BorderBrush="#334155" BorderThickness="1">
+                                        <StackPanel Spacing="6">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1" Content="✕" Click="RemoveProxy_Click" CommandParameter="{Binding}" Background="Transparent" Foreground="#F87171" Padding="8,4" Margin="0,-8,-8,0" Cursor="Hand"/>
+                                            </Grid>
+                                            <TextBox Text="{Binding Url}" Watermark="wss://twichat-proxy-..." TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
+                                            <TextBox Text="{Binding Token}" Watermark="X-Proxy-Token" TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,0">
+                                                <ProgressBar Grid.Column="0" Minimum="0" Maximum="360000" Value="{Binding UsageSeconds}" Height="6" CornerRadius="3" Foreground="#10B981" Background="#1E293B" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding UsageSeconds, StringFormat='{}{0} / 360000 s'}" FontSize="10" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="Инструкция по быстрой установке прокси..." Click="OpenProxyGuide_Click" Background="Transparent" Foreground="#3B82F6" FontSize="12" Padding="0" Cursor="Hand" HorizontalAlignment="Left"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Spacing="6">
