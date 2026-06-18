@@ -161,11 +161,14 @@ wss.on('connection', (clientWs, req) => {
     clientWs.on('message', (message, isBinary) => {
         if (!isBinary) {
             const msgStr = message.toString('utf8');
+            // Only log auth/control lines (not PING which happens every 30s)
             const lines = msgStr.split('\r\n').filter(l => l.trim().length > 0);
             lines.forEach(line => {
-                let logMsg = line;
-                if (line.startsWith('PASS')) logMsg = 'PASS ***';
-                console.log(`[${new Date().toISOString()}] [Client -> Twitch] ${logMsg}`);
+                if (!line.startsWith('PING')) {
+                    let logMsg = line;
+                    if (line.startsWith('PASS')) logMsg = 'PASS ***';
+                    console.log(`[${new Date().toISOString()}] [Client -> Twitch] ${logMsg}`);
+                }
             });
         }
 
@@ -186,12 +189,22 @@ wss.on('connection', (clientWs, req) => {
     });
 
     // ── Twitch → Client ──────────────────────────────────────────────────────
+    // IMPORTANT: Do NOT log every message here.
+    // console.log is synchronous in Node.js. On a busy channel (5+ msg/sec),
+    // logging every PRIVMSG fills the stdout pipe buffer and BLOCKS the event
+    // loop — causing message bursts and apparent chat freezes on the client.
+    let msgCount = 0;
     twitchWs.on('message', (message, isBinary) => {
         if (!isBinary) {
             const msgStr = message.toString('utf8');
             const lines = msgStr.split('\r\n').filter(l => l.trim().length > 0);
             lines.forEach(line => {
-                console.log(`[${new Date().toISOString()}] [Twitch -> Client] ${line}`);
+                // Log only non-chat control messages (RECONNECT, PING, errors, JOIN ack, etc.)
+                if (!line.includes(' PRIVMSG ') && !line.includes(' USERSTATE ') &&
+                    !line.includes(' USERNOTICE ') && !line.includes('PONG')) {
+                    console.log(`[${new Date().toISOString()}] [Twitch -> Client] ${line}`);
+                }
+                msgCount++;
             });
         }
 
@@ -199,6 +212,14 @@ wss.on('connection', (clientWs, req) => {
             clientWs.send(message, { binary: isBinary });
         }
     });
+
+    // Log message throughput every 60 seconds for diagnostics
+    const statsInterval = setInterval(() => {
+        if (msgCount > 0) {
+            console.log(`[${new Date().toISOString()}] Twitch throughput: ${msgCount} lines in last 60s`);
+            msgCount = 0;
+        }
+    }, 60000);
 
     // ── Closures ─────────────────────────────────────────────────────────────
     clientWs.on('close', (code) => {
@@ -209,6 +230,7 @@ wss.on('connection', (clientWs, req) => {
     });
 
     twitchWs.on('close', (code) => {
+        clearInterval(statsInterval);
         console.log(`[${new Date().toISOString()}] Twitch IRC closed (code=${code}).`);
         if (clientWs.readyState === WebSocket.OPEN) {
             clientWs.close(1001, 'Twitch connection closed');
