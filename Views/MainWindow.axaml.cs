@@ -1019,28 +1019,26 @@ public partial class MainWindow : Window
 
     private void AddProxy_Click(object? sender, RoutedEventArgs e)
     {
+        if (ConfigManager.Settings.CloudProxies == null)
+            ConfigManager.Settings.CloudProxies = new System.Collections.ObjectModel.ObservableCollection<TwitchChatCore.Core.Models.CloudProxyServer>();
+
         var newProxy = new TwitchChatCore.Core.Models.CloudProxyServer 
         { 
             Name = $"Proxy {ConfigManager.Settings.CloudProxies.Count + 1}"
         };
         ConfigManager.Settings.CloudProxies.Add(newProxy);
         ConfigManager.Save();
-        
-        // Refresh UI
-        ProxiesList.ItemsSource = null;
-        ProxiesList.ItemsSource = ConfigManager.Settings.CloudProxies;
     }
 
     private void RemoveProxy_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.CommandParameter is TwitchChatCore.Core.Models.CloudProxyServer proxy)
         {
-            ConfigManager.Settings.CloudProxies.Remove(proxy);
-            ConfigManager.Save();
-            
-            // Refresh UI
-            ProxiesList.ItemsSource = null;
-            ProxiesList.ItemsSource = ConfigManager.Settings.CloudProxies;
+            if (ConfigManager.Settings.CloudProxies != null)
+            {
+                ConfigManager.Settings.CloudProxies.Remove(proxy);
+                ConfigManager.Save();
+            }
         }
     }
 
@@ -1050,7 +1048,7 @@ public partial class MainWindow : Window
 <html>
 <head>
     <meta charset='utf-8'>
-    <title>Google Cloud Proxy Guide</title>
+    <title>Hugging Face Proxy Guide</title>
     <style>
         body { font-family: sans-serif; background: #0F172A; color: #E2E8F0; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
         h1, h2, h3 { color: #FFFFFF; }
@@ -1066,44 +1064,71 @@ public partial class MainWindow : Window
     </style>
 </head>
 <body>
-    <h1>Установка собственного Proxy для Twitch Chat</h1>
-    <p>Если провайдер блокирует подключение к чату Twitch (или вы хотите скрыть свой IP), вы можете поднять свой собственный прокси-сервер на базе Google Cloud Run. Это бесплатно и очень просто!</p>
+    <h1>Установка Proxy через Hugging Face (Бесплатно, без карт)</h1>
+    <p>Мы используем популярный сервис Hugging Face Spaces. Он не требует привязки банковских карт, полностью бесплатен и отлично работает в РФ!</p>
     
     <div class='step'>
-        <h2>Шаг 1: Подготовка в Google Cloud</h2>
+        <h2>Шаг 1: Создание проекта</h2>
         <ol>
-            <li>Зайдите на <a href='https://console.cloud.google.com/' style='color:#3B82F6;' target='_blank'>Google Cloud Console</a>.</li>
-            <li>Нажмите <b>Select a project</b> -> <b>New project</b> и назовите его (например, <b>TwiChat</b>).</li>
-            <li>В уведомлениях справа (значок колокольчика) нажмите на созданный проект и выберите <b>Select project</b>.</li>
-            <li><b>ТОЛЬКО ПОСЛЕ ЭТОГО</b> откройте Cloud Shell (кнопка <b>&gt;_</b> в правом верхнем углу).</li>
+            <li>Зарегистрируйтесь на <a href='https://huggingface.co/join' style='color:#3B82F6;' target='_blank'>Hugging Face</a> (нужна только почта).</li>
+            <li>Перейдите в <a href='https://huggingface.co/spaces' style='color:#3B82F6;' target='_blank'>Spaces</a> и нажмите кнопку <b>Create new Space</b> в правом верхнем углу.</li>
+            <li>Заполните форму:
+                <ul>
+                    <li><b>Space name:</b> любое имя (например, <code>twichat-proxy</code>)</li>
+                    <li><b>License:</b> <code>mit</code> (или оставьте пустым)</li>
+                    <li><b>Select the Space SDK:</b> выберите <b class='highlight'>Docker</b>, а затем шаблон <b class='highlight'>Blank</b></li>
+                    <li><b>Space Hardware:</b> Free</li>
+                </ul>
+            </li>
+            <li>Прокрутите вниз и нажмите <b>Create Space</b>.</li>
         </ol>
     </div>
 
     <div class='step'>
-        <h2>Шаг 2: Выполнение скрипта установки</h2>
+        <h2>Шаг 2: Установка пароля (Токена)</h2>
         <ol>
-            <li>Скопируйте скрипт ниже:</li>
+            <li>Перейдите в настройки спейса (кнопка <b>Settings</b> сверху справа).</li>
+            <li>Прокрутите вниз до раздела <b>Variables and secrets</b> и нажмите <b>New secret</b>.</li>
+            <li>В поле Name введите ровно: <code>PROXY_TOKEN</code></li>
+            <li>В поле Value придумайте любой надежный пароль (например, <code>my-secret-123</code>) и нажмите Save. Это будет ваш Токен.</li>
+        </ol>
+    </div>
+
+    <div class='step'>
+        <h2>Шаг 3: Запуск сервера</h2>
+        <ol>
+            <li>Перейдите на вкладку <b>Files</b> (сверху справа).</li>
+            <li>Нажмите <b>Contribute</b> (сверху справа) -> <b>Create a new file</b>.</li>
+            <li>Назовите файл ровно: <code>Dockerfile</code></li>
+            <li>Вставьте этот код в редактор файла:</li>
         </ol>
 <div class='copy-wrapper'>
     <button class='copy-btn' onclick='copyCode(this)' title='Скопировать код'>
         <svg viewBox='0 0 24 24'><rect x='9' y='9' width='13' height='13' rx='2' ry='2'></rect><path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'></path></svg>
         <span>Скопировать</span>
     </button>
-    <pre style='padding-right: 120px;'><code id='deploy-script'>wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/deploy.sh -O deploy.sh && chmod +x deploy.sh && ./deploy.sh</code></pre>
+    <pre style='padding-right: 120px;'><code id='deploy-script'>FROM node:18-alpine
+WORKDIR /app
+RUN wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/server.js -O server.js
+RUN wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/package.json -O package.json
+RUN npm install --production
+EXPOSE 7860
+ENV PORT=7860
+CMD [""npm"", ""start""]</code></pre>
 </div>
-        <ol start='2'>
-            <li>Вставьте его в консоль Google Cloud Shell и нажмите Enter.</li>
-            <li>Дождитесь завершения (около 2 минут). В конце скрипт выдаст вам <b>URL Сервера</b> и <b>Токен</b>.</li>
+        <ol start='5'>
+            <li>Прокрутите вниз и нажмите <b>Commit new file to main</b>.</li>
+            <li>Спейс начнет собираться. Вы можете нажать <b>Logs</b> (сверху справа), чтобы следить за процессом. Подождите 1-2 минуты, пока статус не изменится с <span style='color:#FCD34D;'>Starting</span> на <b class='highlight'>Running</b>.</li>
         </ol>
     </div>
 
     <div class='step'>
-        <h2>Шаг 3: Настройка в приложении</h2>
+        <h2>Шаг 4: Настройка в TwiChatFHR</h2>
         <ol>
-            <li>В приложении TwiChatFHR включите маршрутизацию чата через прокси.</li>
-            <li>Нажмите '+ Добавить прокси'.</li>
-            <li>Вставьте полученные <b>URL Сервера</b> и <b>Токен</b> в соответствующие поля.</li>
-            <li>Готово! Приложение начнет подключаться к чату через ваш собственный прокси.</li>
+            <li>В приложении нажмите '+ Добавить прокси'.</li>
+            <li>Откройте в спейсе вкладку <b>Logs</b>: там будет написан готовый <b>URL Сервера</b>. Просто скопируйте его и вставьте в приложение!</li>
+            <li>В поле <b>Токен</b> впишите пароль, который вы придумали на Шаге 2.</li>
+            <li>Включите маршрутизацию. Готово!</li>
         </ol>
     </div>
 

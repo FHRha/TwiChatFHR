@@ -77,4 +77,14 @@ wss.on('connection', (clientWs, req) => {
 
 server.listen(PORT, () => {
     console.log(`TwiChatFHR Proxy listening on port ${PORT}`);
+    
+    // Auto-detect Hugging Face Spaces URL
+    const hfHost = process.env.SPACE_HOST;
+    if (hfHost) {
+        console.log(`\n======================================================`);
+        console.log(`🚀 ПРОКСИ УСПЕШНО ЗАПУЩЕН НА HUGGING FACE!`);
+        console.log(`🔗 СКОПИРУЙТЕ ЭТОТ URL В ПРИЛОЖЕНИЕ:`);
+        console.log(`   wss://${hfHost}`);
+        console.log(`======================================================\n`);
+    }
 });

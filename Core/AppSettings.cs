@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using TwitchChatCore.Core.Models;
 
 namespace TwitchChatCore.Core;
@@ -67,7 +68,7 @@ public class AppSettings
     
     // Twitch Proxy Settings
     public bool UseTwitchProxy { get; set; } = false;
-    public List<CloudProxyServer> CloudProxies { get; set; } = new List<CloudProxyServer>();
+    public ObservableCollection<CloudProxyServer> CloudProxies { get; set; } = new ObservableCollection<CloudProxyServer>();
     public DateTime LastQuotaResetDate { get; set; } = DateTime.UtcNow;
     
     // UI Design Settings
