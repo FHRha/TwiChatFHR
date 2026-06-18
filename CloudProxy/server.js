@@ -76,11 +76,22 @@ wss.on('connection', (clientWs, req) => {
     console.log(`[${new Date().toISOString()}] Client connected. Proxying to Twitch...`);
 
     const twitchWs = new WebSocket(TWITCH_WS_URL);
+    const messageQueue = [];
 
     // Relay messages from client to Twitch
     clientWs.on('message', (message, isBinary) => {
         if (twitchWs.readyState === WebSocket.OPEN) {
             twitchWs.send(message, { binary: isBinary });
+        } else if (twitchWs.readyState === WebSocket.CONNECTING) {
+            messageQueue.push({ message, isBinary });
+        }
+    });
+
+    twitchWs.on('open', () => {
+        console.log(`[${new Date().toISOString()}] Connected to Twitch. Sending queued messages: ${messageQueue.length}`);
+        while (messageQueue.length > 0) {
+            const msg = messageQueue.shift();
+            twitchWs.send(msg.message, { binary: msg.isBinary });
         }
     });
 

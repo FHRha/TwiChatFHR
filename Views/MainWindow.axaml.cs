@@ -1123,14 +1123,12 @@ public partial class MainWindow : Window
         <svg viewBox='0 0 24 24'><rect x='9' y='9' width='13' height='13' rx='2' ry='2'></rect><path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'></path></svg>
         <span>Скопировать</span>
     </button>
-    <pre style='padding-right: 120px;'><code id='deploy-script'>FROM node:18-alpine
+    <pre style='padding-right: 120px;'><code id='deploy-script'>FROM node:20-alpine
 WORKDIR /app
-RUN wget ""https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/server.js?t=$(date +%s)"" -O server.js
-RUN wget ""https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/package.json?t=$(date +%s)"" -O package.json
-RUN npm install --production
+RUN npm install ws
 EXPOSE 7860
 ENV PORT=7860
-CMD [""npm"", ""start""]</code></pre>
+CMD wget -q ""https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/server.js?t=$(date +%s)"" -O server.js && node server.js</code></pre>
 </div>
         <ol start='5'>
             <li>Прокрутите вниз и нажмите <b>Commit new file to main</b>.</li>

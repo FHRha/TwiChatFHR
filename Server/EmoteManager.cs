@@ -32,10 +32,11 @@ public class EmoteManager
         foreach (var mirror in mirrors)
         {
             var url = $"{mirror}{endpoint}";
-            if (mirror.Contains("script.google.com") || mirror.EndsWith("?url="))
+            if (mirror.Contains("script.google.com") || mirror.EndsWith("?url=") || mirror.EndsWith("&url="))
             {
                 var cleanMirror = mirror;
                 if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
+                else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
                 url = $"{cleanMirror}?url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
                 
                 // Keep token query parameter if present
@@ -449,10 +450,11 @@ public class EmoteManager
             foreach (var mirror in mirrors)
             {
                 var url = $"{mirror}{pathAndQuery}";
-                if (mirror.Contains("script.google.com") || mirror.EndsWith("?url="))
+                if (mirror.Contains("script.google.com") || mirror.EndsWith("?url=") || mirror.EndsWith("&url="))
                 {
                     var cleanMirror = mirror;
                     if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
+                    else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
                     url = $"{cleanMirror}?url={Uri.EscapeDataString(originalUrl)}";
                     
                     // Keep token query parameter if present
