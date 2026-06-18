@@ -231,7 +231,7 @@ public class TwitchIrcClient
             _pingCts = new CancellationTokenSource();
             _ = PingLoopAsync(_pingCts.Token);
 
-            _ = ReceiveLoopAsync();
+            _ = ReceiveLoopAsync(_pingCts.Token);
         }
         catch (Exception ex)
         {
@@ -355,7 +355,7 @@ public class TwitchIrcClient
         });
     }
 
-    private async Task ReceiveLoopAsync()
+    private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
     {
         var buffer = new byte[8192];
         var stringBuilder = new StringBuilder();
@@ -364,7 +364,7 @@ public class TwitchIrcClient
         {
             while (_webSocket != null && _webSocket.State == WebSocketState.Open)
             {
-                var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     break;
@@ -408,13 +408,22 @@ public class TwitchIrcClient
                 }
             }
         }
+        catch (OperationCanceledException)
+        {
+            // Intentional disconnect — do NOT reconnect
+            TwitchChatCore.Core.Logger.Log("TwitchIrcClient: ReceiveLoop cancelled (intentional disconnect).");
+            return;
+        }
         catch (Exception ex)
         {
+            if (cancellationToken.IsCancellationRequested) return;
             TwitchChatCore.Core.Logger.Log($"Receive Error: {ex.Message}");
         }
         finally
         {
-            ScheduleReconnect();
+            // Only reconnect if this wasn't an intentional shutdown
+            if (!cancellationToken.IsCancellationRequested)
+                ScheduleReconnect();
         }
     }
 
