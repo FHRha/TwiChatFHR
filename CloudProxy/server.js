@@ -85,6 +85,16 @@ wss.on('connection', (clientWs, req) => {
 
     // Relay messages from client to Twitch
     clientWs.on('message', (message, isBinary) => {
+        if (!isBinary) {
+            const msgStr = message.toString('utf8');
+            const lines = msgStr.split('\r\n').filter(l => l.trim().length > 0);
+            lines.forEach(line => {
+                let logMsg = line;
+                if (line.startsWith('PASS')) logMsg = 'PASS ***';
+                console.log(`[${new Date().toISOString()}] [Client -> Twitch] ${logMsg}`);
+            });
+        }
+        
         if (twitchWs.readyState === WebSocket.OPEN) {
             twitchWs.send(message, { binary: isBinary });
         } else if (twitchWs.readyState === WebSocket.CONNECTING) {
@@ -102,6 +112,14 @@ wss.on('connection', (clientWs, req) => {
 
     // Relay messages from Twitch to client
     twitchWs.on('message', (message, isBinary) => {
+        if (!isBinary) {
+            const msgStr = message.toString('utf8');
+            const lines = msgStr.split('\r\n').filter(l => l.trim().length > 0);
+            lines.forEach(line => {
+                console.log(`[${new Date().toISOString()}] [Twitch -> Client] ${line}`);
+            });
+        }
+
         if (clientWs.readyState === WebSocket.OPEN) {
             clientWs.send(message, { binary: isBinary });
         }
