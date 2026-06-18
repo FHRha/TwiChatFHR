@@ -31,13 +31,13 @@ public class CdnManager
             string url = GitHubMirrors[index];
             try
             {
-                Console.WriteLine($"[CDN] Trying mirror {index}: {url}");
+                TwitchChatCore.Core.Logger.Log($"[CDN] Trying mirror {index}: {url}");
                 var response = await TwitchChatCore.Core.NetworkManager.GetClient().GetStringAsync(url);
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     if (_lastWorkingIndex != index)
                     {
-                        Console.WriteLine($"[CDN] Switching cached working index to {index}");
+                        TwitchChatCore.Core.Logger.Log($"[CDN] Switching cached working index to {index}");
                         _lastWorkingIndex = index;
                     }
                     return response;
@@ -45,7 +45,7 @@ public class CdnManager
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[CDN] Mirror {index} failed: {ex.Message}");
+                TwitchChatCore.Core.Logger.Log($"[CDN] Mirror {index} failed: {ex.Message}");
             }
         }
         

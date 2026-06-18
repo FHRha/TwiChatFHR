@@ -82,40 +82,55 @@ function addMessage(data) {
     
     chatContainer.appendChild(msgElement);
     
-    window.scrollTo(0, document.body.scrollHeight);
+    scheduleScroll();
     
-    let activeCount = 0;
-    let firstActive = null;
+    // Remove old messages to prevent memory leaks and DOM bloat
     let childrenCount = chatContainer.children.length;
     
-    for (let i = childrenCount - 1; i >= 0; i--) {
-        let c = chatContainer.children[i];
-        if (!c.classList.contains('msg-vanishing') && !c.classList.contains('msg-deleted-crumble')) {
-            activeCount++;
-            firstActive = c; // Will end up being the oldest active message
+    // Only do the fading logic if we have slightly more than 50 messages
+    if (childrenCount > 55) {
+        let activeCount = 0;
+        let firstActive = null;
+        
+        for (let i = childrenCount - 1; i >= 0; i--) {
+            let c = chatContainer.children[i];
+            if (!c.classList.contains('msg-vanishing') && !c.classList.contains('msg-deleted-crumble')) {
+                activeCount++;
+                firstActive = c; // Will end up being the oldest active message
+            }
+        }
+        
+        if (activeCount > 50 && firstActive) {
+            firstActive.classList.add('msg-vanishing');
+            let removed = false;
+            firstActive.addEventListener('animationend', () => {
+                if (!removed) { removed = true; firstActive.remove(); }
+            });
+            // Fallback for background tabs / hidden OBS sources
+            setTimeout(() => {
+                if (!removed && firstActive.parentNode) { removed = true; firstActive.remove(); }
+            }, 500);
         }
     }
     
-    if (activeCount > 50 && firstActive) {
-        firstActive.classList.add('msg-vanishing');
-        let removed = false;
-        firstActive.addEventListener('animationend', () => {
-            if (!removed) { removed = true; firstActive.remove(); }
-        });
-        // Fallback for background tabs / hidden OBS sources
-        setTimeout(() => {
-            if (!removed && firstActive.parentNode) { removed = true; firstActive.remove(); }
-        }, 500);
-    }
-    
     // Absolute DOM limit fail-safe
-    if (chatContainer.children.length > 100) {
-        let diff = chatContainer.children.length - 100;
+    if (childrenCount > 100) {
+        let diff = childrenCount - 100;
         for(let i = 0; i < diff; i++) {
             if(chatContainer.firstElementChild) {
                 chatContainer.firstElementChild.remove();
             }
         }
+    }
+}
+
+let scrollTimeout = null;
+function scheduleScroll() {
+    if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+            window.scrollTo(0, document.body.scrollHeight);
+            scrollTimeout = null;
+        }, 16);
     }
 }
 

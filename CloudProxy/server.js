@@ -43,17 +43,45 @@ const server = http.createServer((req, res) => {
             const targetUrl = new URL(targetUrlStr);
             const client = targetUrl.protocol === 'http:' ? http : https;
 
-            client.get(targetUrlStr, (proxyRes) => {
+            const options = {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Origin': 'https://7tv.app',
+                    'Referer': 'https://7tv.app/'
+                },
+                timeout: 10000 // 10 second timeout
+            };
+
+            const proxyReq = client.get(targetUrlStr, options, (proxyRes) => {
                 console.log(`[${new Date().toISOString()}] HTTP Proxy received ${proxyRes.statusCode} from ${targetUrlStr}`);
                 const headers = { ...proxyRes.headers };
                 headers['Access-Control-Allow-Origin'] = '*';
                 
                 res.writeHead(proxyRes.statusCode || 200, headers);
+                
+                proxyRes.on('error', (err) => console.error('proxyRes error:', err.message));
+                res.on('error', (err) => console.error('res error:', err.message));
+                
                 proxyRes.pipe(res);
-            }).on('error', (err) => {
+            });
+            
+            proxyReq.on('timeout', () => {
+                console.error(`[${new Date().toISOString()}] HTTP Proxy Timeout for ${targetUrlStr}`);
+                proxyReq.destroy();
+                if (!res.headersSent) {
+                    res.writeHead(504, { 'Content-Type': 'text/plain' });
+                    res.end('Gateway Timeout');
+                }
+            });
+
+            proxyReq.on('error', (err) => {
                 console.error(`[${new Date().toISOString()}] HTTP Proxy Error for ${targetUrlStr}:`, err.message);
-                res.writeHead(500, { 'Content-Type': 'text/plain' });
-                res.end('Proxy Error');
+                if (!res.headersSent) {
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                    res.end('Proxy Error');
+                }
             });
         } catch (e) {
             console.log(`[${new Date().toISOString()}] HTTP Proxy rejected: Invalid Request. Error: ${e.message}`);

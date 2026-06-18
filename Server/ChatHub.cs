@@ -3,18 +3,65 @@ using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace TwitchChatCore.Server;
 
+public class ChatClient
+{
+    public WebSocket Socket { get; }
+    public Channel<string> MessageQueue { get; }
+    public CancellationTokenSource Cts { get; }
+
+    public ChatClient(WebSocket socket)
+    {
+        Socket = socket;
+        // Bounded channel to prevent infinite memory growth if a client is completely frozen
+        MessageQueue = Channel.CreateBounded<string>(new BoundedChannelOptions(500) { FullMode = BoundedChannelFullMode.DropOldest });
+        Cts = new CancellationTokenSource();
+    }
+}
+
 public class ChatHub
 {
-    private readonly ConcurrentDictionary<Guid, WebSocket> _sockets = new();
+    private readonly ConcurrentDictionary<Guid, ChatClient> _clients = new();
+
+    public ChatHub()
+    {
+    }
 
     public async Task HandleConnectionAsync(WebSocket webSocket)
     {
         var socketId = Guid.NewGuid();
-        _sockets.TryAdd(socketId, webSocket);
+        var client = new ChatClient(webSocket);
+        _clients.TryAdd(socketId, client);
+
+        // Start dedicated sender loop for this client
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await foreach (var message in client.MessageQueue.Reader.ReadAllAsync(client.Cts.Token))
+                {
+                    if (webSocket.State != WebSocketState.Open) break;
+                    var bytes = Encoding.UTF8.GetBytes(message);
+                    var segment = new ArraySegment<byte>(bytes);
+                    
+                    try
+                    {
+                        using var sendCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(client.Cts.Token, sendCts.Token);
+                        await webSocket.SendAsync(segment, WebSocketMessageType.Text, true, linkedCts.Token);
+                    }
+                    catch
+                    {
+                        // Ignore individual send errors, loop continues
+                    }
+                }
+            }
+            catch { }
+        });
 
         // Send initial design config
         var initialConfig = $@"{{
@@ -58,11 +105,12 @@ public class ChatHub
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"WebSocket error: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"WebSocket error: {ex.Message}");
         }
         finally
         {
-            _sockets.TryRemove(socketId, out _);
+            client.Cts.Cancel();
+            _clients.TryRemove(socketId, out _);
             if (webSocket.State == WebSocketState.Open)
             {
                 await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
@@ -70,24 +118,12 @@ public class ChatHub
         }
     }
 
-    public async Task BroadcastMessageAsync(string message)
+    public Task BroadcastMessageAsync(string message)
     {
-        var bytes = Encoding.UTF8.GetBytes(message);
-        var segment = new ArraySegment<byte>(bytes);
-
-        foreach (var socket in _sockets.Values)
+        foreach (var client in _clients.Values)
         {
-            if (socket.State == WebSocketState.Open)
-            {
-                try
-                {
-                    await socket.SendAsync(segment, WebSocketMessageType.Text, true, CancellationToken.None);
-                }
-                catch
-                {
-                    // Ignore closed sockets
-                }
-            }
+            client.MessageQueue.Writer.TryWrite(message);
         }
+        return Task.CompletedTask;
     }
 }

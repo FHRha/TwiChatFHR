@@ -159,12 +159,14 @@ public class TwitchIrcClient
         {
             _ = SendAsync($"PART #{oldChannel}");
             _ = SendAsync($"JOIN #{_channel}");
-            Console.WriteLine($"TwitchIrcClient: Switched channel from {oldChannel} to {_channel}");
+            TwitchChatCore.Core.Logger.Log($"TwitchIrcClient: Switched channel from {oldChannel} to {_channel}");
         }
         
         _currentRoomId = string.Empty; // Reset so emotes reload
         _ = _badgeManager.LoadChannelBadgesAsync(_channel);
     }
+
+    private CancellationTokenSource? _pingCts;
 
     public async Task ReconnectAsync()
     {
@@ -186,6 +188,7 @@ public class TwitchIrcClient
             _webSocket = null;
         }
         _testModeCts?.Cancel();
+        _pingCts?.Cancel();
     }
 
     public async Task ConnectAsync()
@@ -218,15 +221,43 @@ public class TwitchIrcClient
             await SendAsync($"NICK justinfan{new Random().Next(10000, 99999)}");
             await SendAsync($"JOIN #{_channel}");
 
-            Console.WriteLine($"TwitchIrcClient: Connected to channel {_channel}");
+            TwitchChatCore.Core.Logger.Log($"TwitchIrcClient: Connected to channel {_channel}");
+
+            _pingCts?.Cancel();
+            _pingCts = new CancellationTokenSource();
+            _ = PingLoopAsync(_pingCts.Token);
 
             _ = ReceiveLoopAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Twitch IRC Connection Error: {ex.Message}");
-            // Optional: Reconnection logic
+            TwitchChatCore.Core.Logger.Log($"Twitch IRC Connection Error: {ex.Message}");
+            ScheduleReconnect();
         }
+    }
+
+    private void ScheduleReconnect()
+    {
+        if (_channel == "test") return;
+        TwitchChatCore.Core.Logger.Log("Connection lost. Reconnecting in 5 seconds...");
+        _ = Task.Run(async () => {
+            await Task.Delay(5000);
+            await ReconnectAsync();
+        });
+    }
+
+    private async Task PingLoopAsync(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(30), token);
+                if (token.IsCancellationRequested) break;
+                await SendAsync("PING :tmi.twitch.tv");
+            }
+        }
+        catch { }
     }
 
     private void StartTestSimulator()
@@ -237,7 +268,7 @@ public class TwitchIrcClient
 
         _ = Task.Run(async () =>
         {
-            Console.WriteLine("TwitchIrcClient: Test Simulator Started");
+            TwitchChatCore.Core.Logger.Log("TwitchIrcClient: Test Simulator Started");
             int msgIndex = 0;
             var testUsers = new[] { "Viewer1", "ModMan", "BroadcasterTest", "Viewer1", "VipUser", "Newbie" };
             
@@ -336,6 +367,7 @@ public class TwitchIrcClient
                 }
 
                 var chunk = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                TwitchChatCore.Core.Logger.Log($"[RAW RECEIVE] {chunk}");
                 stringBuilder.Append(chunk);
 
                 var message = stringBuilder.ToString();
@@ -374,7 +406,11 @@ public class TwitchIrcClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Receive Error: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Receive Error: {ex.Message}");
+        }
+        finally
+        {
+            ScheduleReconnect();
         }
     }
 
@@ -622,7 +658,7 @@ public class TwitchIrcClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Parse Error: {ex.Message} on line: {line}");
+            TwitchChatCore.Core.Logger.Log($"Parse Error: {ex.Message} on line: {line}");
         }
     }
 
@@ -662,7 +698,7 @@ public class TwitchIrcClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ClearMsg Error: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"ClearMsg Error: {ex.Message}");
         }
     }
 
@@ -685,7 +721,7 @@ public class TwitchIrcClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"ClearChat Error: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"ClearChat Error: {ex.Message}");
         }
     }
 

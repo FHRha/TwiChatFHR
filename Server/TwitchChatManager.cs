@@ -76,15 +76,15 @@ public class TwitchChatManager
         {
             try
             {
-                Console.WriteLine("TwitchChatManager: Trying direct connection to Twitch...");
+                TwitchChatCore.Core.Logger.Log("TwitchChatManager: Trying direct connection to Twitch...");
                 var directWs = new ClientWebSocket();
                 await directWs.ConnectAsync(new Uri("wss://irc-ws.chat.twitch.tv:443"), cancellationToken);
-                Console.WriteLine("TwitchChatManager: Direct connection successful.");
+                TwitchChatCore.Core.Logger.Log("TwitchChatManager: Direct connection successful.");
                 return directWs;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"TwitchChatManager: Direct connection failed: {ex.Message}");
+                TwitchChatCore.Core.Logger.Log($"TwitchChatManager: Direct connection failed: {ex.Message}");
                 if (!ConfigManager.Settings.UseTwitchProxy)
                 {
                     throw new Exception("Не удалось подключиться к Twitch Chat напрямую.");
@@ -103,14 +103,14 @@ public class TwitchChatManager
             {
                 try
                 {
-                    Console.WriteLine($"TwitchChatManager: Trying proxy {proxy.Name} ({proxy.Url})...");
+                    TwitchChatCore.Core.Logger.Log($"TwitchChatManager: Trying proxy {proxy.Name} ({proxy.Url})...");
                     var proxyWs = new ClientWebSocket();
                     proxyWs.Options.SetRequestHeader("X-Proxy-Token", proxy.Token);
                     
                     var uri = new Uri(proxy.Url);
                     await proxyWs.ConnectAsync(uri, cancellationToken);
                     
-                    Console.WriteLine($"TwitchChatManager: Connected via proxy {proxy.Name}.");
+                    TwitchChatCore.Core.Logger.Log($"TwitchChatManager: Connected via proxy {proxy.Name}.");
                     
                     _activeProxy = proxy;
                     ActiveProxyChanged?.Invoke(_activeProxy);
@@ -119,7 +119,7 @@ public class TwitchChatManager
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"TwitchChatManager: Proxy {proxy.Name} failed: {ex.Message}");
+                    TwitchChatCore.Core.Logger.Log($"TwitchChatManager: Proxy {proxy.Name} failed: {ex.Message}");
                 }
             }
             

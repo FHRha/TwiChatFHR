@@ -57,11 +57,11 @@ public static class NetworkManager
                     lock (_mirrorsLock) { _cdnMirrors = cdns; }
                 }
             }
-            Console.WriteLine($"Loaded {_apiMirrors.Count} API mirrors and {_cdnMirrors.Count} CDN mirrors from GitHub.");
+            TwitchChatCore.Core.Logger.Log($"Loaded {_apiMirrors.Count} API mirrors and {_cdnMirrors.Count} CDN mirrors from GitHub.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load remote mirrors, using defaults. Error: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Failed to load remote mirrors, using defaults. Error: {ex.Message}");
         }
         UpdateCustomWorker();
         _mirrorsLoaded = true;

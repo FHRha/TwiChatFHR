@@ -41,9 +41,10 @@ public class EmoteManager
                 else
                 {
                     var cleanMirror = mirror;
-                    if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
-                    else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
-                    url = $"{cleanMirror}?url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
+                    string sep = "?";
+                    if (mirror.Contains("?url=")) { cleanMirror = mirror.Substring(0, mirror.IndexOf("?url=")); sep = "?"; }
+                    else if (mirror.Contains("&url=")) { cleanMirror = mirror.Substring(0, mirror.IndexOf("&url=")); sep = "&"; }
+                    url = $"{cleanMirror}{sep}url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
                 }
             }
             try
@@ -54,7 +55,7 @@ public class EmoteManager
             {
                 lastEx = ex;
                 var inner = ex.InnerException != null ? $" Inner: {ex.InnerException.Message}" : "";
-                Console.WriteLine($"Mirror fallback: failed to fetch {url}: {ex.Message}{inner}");
+                TwitchChatCore.Core.Logger.Log($"Mirror fallback: failed to fetch {url}: {ex.Message}{inner}");
             }
         }
         throw lastEx ?? new Exception("All 7TV API mirrors failed.");
@@ -78,28 +79,28 @@ public class EmoteManager
                     var json = await File.ReadAllTextAsync(cacheFile);
                     await ParseAndDownloadEmotesAsync(json, _globalEmotes, "global");
                     loadedFromCache = true;
-                    Console.WriteLine($"Loaded {_globalEmotes.Count} global emotes from cache.");
+                    TwitchChatCore.Core.Logger.Log($"Loaded {_globalEmotes.Count} global emotes from cache.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Cache corrupted for global emotes, ignoring cache. Error: {ex.Message}");
+                    TwitchChatCore.Core.Logger.Log($"Cache corrupted for global emotes, ignoring cache. Error: {ex.Message}");
                     File.Delete(cacheFile);
                 }
             }
 
             if (!loadedFromCache || (DateTime.Now - File.GetLastWriteTime(cacheFile)).TotalDays >= 7)
             {
-                Console.WriteLine("Fetching 7TV global emotes updates...");
+                TwitchChatCore.Core.Logger.Log("Fetching 7TV global emotes updates...");
                 var json = await FetchWithMirrorFallbackAsync("/v3/emote-sets/global");
                 
                 await File.WriteAllTextAsync(cacheFile, json);
                 await ParseAndDownloadEmotesAsync(json, _globalEmotes, "global");
-                Console.WriteLine($"Updated {_globalEmotes.Count} global emotes.");
+                TwitchChatCore.Core.Logger.Log($"Updated {_globalEmotes.Count} global emotes.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load global 7TV emotes: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Failed to load global 7TV emotes: {ex.Message}");
             OnEmoteDownloadError?.Invoke("global", ex.Message);
         }
     }
@@ -123,18 +124,18 @@ public class EmoteManager
                     _channelEmotes.Clear();
                     await ParseAndDownloadEmotesAsync(json, _channelEmotes, $"{channelName}/7tv");
                     loadedFromCache = true;
-                    Console.WriteLine($"Loaded {_channelEmotes.Count} channel emotes from cache.");
+                    TwitchChatCore.Core.Logger.Log($"Loaded {_channelEmotes.Count} channel emotes from cache.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Cache corrupted for channel {channelName}, ignoring cache. Error: {ex.Message}");
+                    TwitchChatCore.Core.Logger.Log($"Cache corrupted for channel {channelName}, ignoring cache. Error: {ex.Message}");
                     File.Delete(cacheFile);
                 }
             }
 
             if (!loadedFromCache || (DateTime.Now - File.GetLastWriteTime(cacheFile)).TotalDays > 1)
             {
-                Console.WriteLine($"Fetching 7TV channel emotes updates for {channelName}...");
+                TwitchChatCore.Core.Logger.Log($"Fetching 7TV channel emotes updates for {channelName}...");
                 var userJson = await FetchWithMirrorFallbackAsync($"/v3/users/twitch/{twitchUserId}");
                 
                 using var doc = JsonDocument.Parse(userJson);
@@ -146,13 +147,13 @@ public class EmoteManager
                     
                     _channelEmotes.Clear();
                     await ParseAndDownloadEmotesAsync(emoteSetJson, _channelEmotes, $"{channelName}/7tv");
-                    Console.WriteLine($"Updated {_channelEmotes.Count} channel emotes.");
+                    TwitchChatCore.Core.Logger.Log($"Updated {_channelEmotes.Count} channel emotes.");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load channel 7TV emotes for {channelName}: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Failed to load channel 7TV emotes for {channelName}: {ex.Message}");
             OnEmoteDownloadError?.Invoke(channelName, ex.Message);
         }
     }
@@ -201,7 +202,7 @@ public class EmoteManager
             
             if (emotesToDownload.Count > 0)
             {
-                Console.WriteLine($"Downloading {emotesToDownload.Count} BTTV emotes...");
+                TwitchChatCore.Core.Logger.Log($"Downloading {emotesToDownload.Count} BTTV emotes...");
                 int total = emotesToDownload.Count;
                 int processed = 0;
                 int successful = 0;
@@ -229,7 +230,7 @@ public class EmoteManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load BTTV emotes for {channelName}: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Failed to load BTTV emotes for {channelName}: {ex.Message}");
         }
     }
 
@@ -269,7 +270,7 @@ public class EmoteManager
 
                 if (emotesToDownload.Count > 0)
                 {
-                    Console.WriteLine($"Downloading {emotesToDownload.Count} FFZ emotes...");
+                    TwitchChatCore.Core.Logger.Log($"Downloading {emotesToDownload.Count} FFZ emotes...");
                     int total = emotesToDownload.Count;
                     int processed = 0;
                     int successful = 0;
@@ -298,7 +299,7 @@ public class EmoteManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to load FFZ emotes for {channelName}: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Failed to load FFZ emotes for {channelName}: {ex.Message}");
         }
     }
 
@@ -458,9 +459,10 @@ public class EmoteManager
                     else
                     {
                         var cleanMirror = mirror;
-                        if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
-                        else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
-                        url = $"{cleanMirror}?url={Uri.EscapeDataString(originalUrl)}";
+                        string sep = "?";
+                        if (mirror.Contains("?url=")) { cleanMirror = mirror.Substring(0, mirror.IndexOf("?url=")); sep = "?"; }
+                        else if (mirror.Contains("&url=")) { cleanMirror = mirror.Substring(0, mirror.IndexOf("&url=")); sep = "&"; }
+                        url = $"{cleanMirror}{sep}url={Uri.EscapeDataString(originalUrl)}";
                     }
                 }
                 for (int i = 0; i < 2; i++)
@@ -482,7 +484,7 @@ public class EmoteManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error downloading emote {originalUrl}: {ex.Message}");
+            TwitchChatCore.Core.Logger.Log($"Error downloading emote {originalUrl}: {ex.Message}");
             return false;
         }
         finally
