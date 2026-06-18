@@ -1109,8 +1109,8 @@ public partial class MainWindow : Window
     </button>
     <pre style='padding-right: 120px;'><code id='deploy-script'>FROM node:18-alpine
 WORKDIR /app
-RUN wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/server.js -O server.js
-RUN wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/package.json -O package.json
+RUN wget ""https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/server.js?t=$(date +%s)"" -O server.js
+RUN wget ""https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/package.json?t=$(date +%s)"" -O package.json
 RUN npm install --production
 EXPOSE 7860
 ENV PORT=7860
