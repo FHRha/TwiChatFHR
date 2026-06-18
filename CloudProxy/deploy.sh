@@ -23,45 +23,10 @@ echo "[3/4] Подготовка файлов сервера..."
 mkdir -p twichat-proxy-tmp
 cd twichat-proxy-tmp
 
-cat << 'EOF' > package.json
-{
-  "name": "twichat-proxy",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "dependencies": { "ws": "^8.16.0" }
-}
-EOF
+echo "Загрузка актуальных файлов из репозитория..."
+wget -q "https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/server.js?t=$(date +%s)" -O server.js
+wget -q "https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/package.json?t=$(date +%s)" -O package.json
 
-cat << 'EOF' > server.js
-const WebSocket = require('ws');
-const http = require('http');
-
-const PORT = process.env.PORT || 8080;
-const PROXY_TOKEN = process.env.PROXY_TOKEN;
-const TWITCH_WS_URL = 'wss://irc-ws.chat.twitch.tv:443';
-
-const server = http.createServer((req, res) => {
-    if (req.url === '/') { res.writeHead(200); res.end('TwiChatFHR Proxy is running.'); return; }
-    res.writeHead(404); res.end('Not Found');
-});
-
-const wss = new WebSocket.Server({ server });
-
-wss.on('connection', (clientWs, req) => {
-    const token = req.headers['x-proxy-token'];
-    if (!PROXY_TOKEN || token !== PROXY_TOKEN) {
-        clientWs.close(4001, 'Unauthorized'); return;
-    }
-    const twitchWs = new WebSocket(TWITCH_WS_URL);
-    clientWs.on('message', msg => { if (twitchWs.readyState === WebSocket.OPEN) twitchWs.send(msg); });
-    twitchWs.on('message', msg => { if (clientWs.readyState === WebSocket.OPEN) clientWs.send(msg); });
-    clientWs.on('close', () => { if (twitchWs.readyState === WebSocket.OPEN) twitchWs.close(); });
-    twitchWs.on('close', () => { if (clientWs.readyState === WebSocket.OPEN) clientWs.close(); });
-});
-
-server.listen(PORT);
-EOF
 
 cat << 'EOF' > Dockerfile
 FROM node:20-alpine

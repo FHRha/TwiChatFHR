@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const http = require('http');
+const https = require('https');
 
 const PORT = process.env.PORT || 8080;
 const PROXY_TOKEN = process.env.PROXY_TOKEN;
@@ -17,6 +18,46 @@ const server = http.createServer((req, res) => {
         return;
     }
     
+    // HTTP Proxy for Emotes
+    if (req.url.startsWith('/proxy')) {
+        try {
+            const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+            const token = parsedUrl.searchParams.get('token');
+            const targetUrlStr = parsedUrl.searchParams.get('url');
+
+            if (!PROXY_TOKEN || token !== PROXY_TOKEN) {
+                res.writeHead(401, { 'Content-Type': 'text/plain' });
+                res.end('Unauthorized');
+                return;
+            }
+
+            if (!targetUrlStr) {
+                res.writeHead(400, { 'Content-Type': 'text/plain' });
+                res.end('Missing url parameter');
+                return;
+            }
+
+            const targetUrl = new URL(targetUrlStr);
+            const client = targetUrl.protocol === 'http:' ? http : https;
+
+            client.get(targetUrlStr, (proxyRes) => {
+                const headers = { ...proxyRes.headers };
+                headers['Access-Control-Allow-Origin'] = '*';
+                
+                res.writeHead(proxyRes.statusCode || 200, headers);
+                proxyRes.pipe(res);
+            }).on('error', (err) => {
+                console.error(`HTTP Proxy Error for ${targetUrlStr}:`, err.message);
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Proxy Error');
+            });
+        } catch (e) {
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.end('Invalid Request');
+        }
+        return;
+    }
+
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
 });

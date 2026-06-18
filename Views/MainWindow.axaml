@@ -358,45 +358,64 @@
                     <TextBlock Text="{DynamicResource RestartRequiredHint}" FontSize="11" Foreground="#94A3B8"/>
                 </StackPanel>
 
-                <StackPanel Spacing="6">
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,2">
-                        <TextBlock Grid.Column="0" Text="{DynamicResource CustomWorkerLabel}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Button Grid.Column="1" Content="{DynamicResource HowToCreateWorkerBtn}" Click="OpenWorkerGuide_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#3B82F6" Padding="4,0" Cursor="Hand" FontSize="12" VerticalAlignment="Center"/>
-                    </Grid>
-                    <TextBox Name="CustomWorkerTextBox" TextChanged="TextBox_TextChanged" Watermark="https://..."/>
-                    <TextBlock Text="{DynamicResource CustomWorkerHint}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap"/>
-                </StackPanel>
+                <!-- Proxy Settings Group -->
+                <Border Background="#0F172A" CornerRadius="8" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Настройки Прокси" FontWeight="Bold" FontSize="16" Foreground="#E2E8F0"/>
+                        
+                        <!-- Twitch Chat Proxy Section -->
+                        <StackPanel Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+                                <TextBlock Grid.Column="0" Text="Twitch Chat Proxy (Hugging Face)" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ToggleSwitch Grid.Column="1" Name="UseTwitchProxySwitch" IsChecked="False" Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
+                            </Grid>
+                            <TextBlock Text="Маршрутизировать трафик Twitch чата через свой прокси-сервер." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,-4,0,4"/>
+                            
+                            <StackPanel Name="ProxyListPanel" IsVisible="False" Spacing="8">
+                                <CheckBox Name="UseStrictTwitchProxyCheck" Content="Строгий режим (только прокси)" ToolTip.Tip="Не пытаться подключаться напрямую, если прокси недоступен." Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
+                                <CheckBox Name="UseTwitchProxyForEmotesCheck" Content="Использовать Twitch Chat Proxy для загрузки эмоутов" ToolTip.Tip="Проксировать загрузку картинок через этот же сервер, отключая сторонние прокси для эмоутов." Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
+                                
+                                <Button Content="+ Добавить прокси" Click="AddProxy_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Background="#1E293B" Foreground="#38BDF8" CornerRadius="8"/>
+                                <ItemsControl Name="ProxiesList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="models:CloudProxyServer">
+                                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,0,8" BorderBrush="#475569" BorderThickness="1">
+                                                <StackPanel Spacing="6">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
+                                                        <Button Grid.Column="1" Content="✕" Click="RemoveProxy_Click" CommandParameter="{Binding}" Background="Transparent" Foreground="#F87171" Padding="8,4" Margin="0,-8,-8,0" Cursor="Hand"/>
+                                                    </Grid>
+                                                    <TextBox Text="{Binding Url}" Watermark="wss://twichat-proxy-..." TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
+                                                    <TextBox Text="{Binding Token}" Watermark="X-Proxy-Token" TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
+                                                    <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{Binding StatusColor}" HorizontalAlignment="Right" Margin="0,4,4,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Инструкция по быстрой установке прокси..." Click="OpenProxyGuide_Click" Background="Transparent" Foreground="#3B82F6" FontSize="12" Padding="0" Cursor="Hand" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </StackPanel>
 
-                <!-- Twitch Proxy Section -->
-                <StackPanel Spacing="6" Margin="0,5,0,0">
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,2">
-                        <TextBlock Grid.Column="0" Text="Twitch Chat Proxy (Google Cloud Run)" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ToggleSwitch Grid.Column="1" Name="UseTwitchProxySwitch" IsChecked="False" Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
-                    </Grid>
-                    <TextBlock Text="Маршрутизировать трафик Twitch чата через прокси-сервер (помогает от блокировок и скрывает IP-адрес)." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,-4,0,4"/>
-                    
-                    <StackPanel Name="ProxyListPanel" IsVisible="False" Spacing="8">
-                        <Button Content="+ Добавить прокси" Click="AddProxy_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Background="#0F172A" Foreground="#38BDF8" CornerRadius="8"/>
-                        <ItemsControl Name="ProxiesList">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="models:CloudProxyServer">
-                                    <Border Background="#0F172A" CornerRadius="8" Padding="12" Margin="0,0,0,8" BorderBrush="#334155" BorderThickness="1">
-                                        <StackPanel Spacing="6">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="Bold" Foreground="#E2E8F0" VerticalAlignment="Center"/>
-                                                <Button Grid.Column="1" Content="✕" Click="RemoveProxy_Click" CommandParameter="{Binding}" Background="Transparent" Foreground="#F87171" Padding="8,4" Margin="0,-8,-8,0" Cursor="Hand"/>
-                                            </Grid>
-                                            <TextBox Text="{Binding Url}" Watermark="wss://twichat-proxy-..." TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
-                                            <TextBox Text="{Binding Token}" Watermark="X-Proxy-Token" TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{Binding StatusColor}" HorizontalAlignment="Right" Margin="0,4,4,0"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Button Content="Инструкция по быстрой установке прокси..." Click="OpenProxyGuide_Click" Background="Transparent" Foreground="#3B82F6" FontSize="12" Padding="0" Cursor="Hand" HorizontalAlignment="Left"/>
+                        <!-- Emotes Proxy Section -->
+                        <StackPanel Name="EmotesProxyMainPanel" Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+                                <TextBlock Grid.Column="0" Text="Прокси для Эмоутов (Google Apps Script)" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ToggleSwitch Grid.Column="1" Name="UseCustomEmoteProxySwitch" IsChecked="False" Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
+                            </Grid>
+                            <TextBlock Text="Загружать картинки эмоутов через прокси, если 7tv.app заблокирован." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,-4,0,4"/>
+                            
+                            <StackPanel Name="EmotesProxyPanel" IsVisible="False" Spacing="8">
+                                <CheckBox Name="UseStrictEmoteProxyCheck" Content="Строгий режим (не использовать сервера 7TV напрямую)" ToolTip.Tip="Не пытаться скачивать картинки напрямую с серверов 7TV." Checked="ProxySettings_Changed" Unchecked="ProxySettings_Changed"/>
+                                
+                                <StackPanel Name="GoogleAppsScriptPanel" Spacing="6">
+                                    <TextBox Name="CustomWorkerTextBox" TextChanged="TextBox_TextChanged" Watermark="https://script.google.com/macros/s/.../exec"/>
+                                    <Button Content="Инструкция по созданию прокси в Google Apps Script" Click="OpenWorkerGuide_Click" Background="Transparent" Foreground="#3B82F6" FontSize="12" Padding="0" Cursor="Hand" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Border>
 
                 <StackPanel Spacing="6">
                     <TextBlock Text="{DynamicResource ObsSourceUrlLabel}" FontWeight="SemiBold"/>

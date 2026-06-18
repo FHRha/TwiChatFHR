@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -68,18 +69,41 @@ public static class NetworkManager
 
     public static void UpdateCustomWorker()
     {
-        var customWorker = ConfigManager.Settings.CustomWorkerUrl?.TrimEnd('/');
-        
         lock (_mirrorsLock)
         {
-            // Remove old custom worker if it exists
-            _apiMirrors.RemoveAll(x => x != "https://7tv.io" && x != "https://api.7tv.app" && x != "https://eu.7tv.app");
-            _cdnMirrors.RemoveAll(x => x != "https://cdn.7tv.app" && x != "https://cdn.zerotv.app");
-
-            if (!string.IsNullOrWhiteSpace(customWorker))
+            // Reset to default
+            _apiMirrors.Clear();
+            _cdnMirrors.Clear();
+            
+            if (!ConfigManager.Settings.UseStrictEmoteProxy)
             {
-                if (!_apiMirrors.Contains(customWorker)) _apiMirrors.Insert(0, customWorker);
-                if (!_cdnMirrors.Contains(customWorker)) _cdnMirrors.Insert(0, customWorker);
+                _apiMirrors.AddRange(new[] { "https://7tv.io", "https://api.7tv.app", "https://eu.7tv.app" });
+                _cdnMirrors.AddRange(new[] { "https://cdn.7tv.app", "https://cdn.zerotv.app" });
+            }
+
+            if (ConfigManager.Settings.UseTwitchProxyForEmotes && ConfigManager.Settings.UseTwitchProxy && ConfigManager.Settings.CloudProxies.Count > 0)
+            {
+                var activeProxy = ConfigManager.Settings.CloudProxies.FirstOrDefault(p => p.IsEnabled);
+                if (activeProxy != null)
+                {
+                    string baseUrl = activeProxy.Url;
+                    if (baseUrl.StartsWith("wss://")) baseUrl = "https://" + baseUrl.Substring(6);
+                    else if (baseUrl.StartsWith("ws://")) baseUrl = "http://" + baseUrl.Substring(5);
+                    
+                    baseUrl = baseUrl.TrimEnd('/');
+                    string hfProxy = $"{baseUrl}/proxy?token={Uri.EscapeDataString(activeProxy.Token)}&url=";
+                    _apiMirrors.Insert(0, hfProxy);
+                    _cdnMirrors.Insert(0, hfProxy);
+                }
+            }
+            else if (ConfigManager.Settings.UseCustomEmoteProxy)
+            {
+                var customWorker = ConfigManager.Settings.CustomWorkerUrl?.TrimEnd('/');
+                if (!string.IsNullOrWhiteSpace(customWorker))
+                {
+                    if (!_apiMirrors.Contains(customWorker)) _apiMirrors.Insert(0, customWorker);
+                    if (!_cdnMirrors.Contains(customWorker)) _cdnMirrors.Insert(0, customWorker);
+                }
             }
         }
     }

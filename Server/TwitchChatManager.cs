@@ -25,7 +25,7 @@ public class TwitchChatManager
     {
         Task.Run(async () =>
         {
-            using var httpClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+            using var httpClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             while (!_timerCts.Token.IsCancellationRequested)
             {
                 if (ConfigManager.Settings.UseTwitchProxy)
@@ -71,21 +71,28 @@ public class TwitchChatManager
         _activeProxy = null;
         ActiveProxyChanged?.Invoke(null);
 
-        // 1. Direct connection attempt
-        try
+        // 1. Direct connection attempt (if not strict proxy)
+        if (!ConfigManager.Settings.UseTwitchProxy || !ConfigManager.Settings.UseStrictTwitchProxy)
         {
-            Console.WriteLine("TwitchChatManager: Trying direct connection to Twitch...");
-            var directWs = new ClientWebSocket();
-            await directWs.ConnectAsync(new Uri("wss://irc-ws.chat.twitch.tv:443"), cancellationToken);
-            Console.WriteLine("TwitchChatManager: Direct connection successful.");
-            return directWs;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"TwitchChatManager: Direct connection failed: {ex.Message}");
+            try
+            {
+                Console.WriteLine("TwitchChatManager: Trying direct connection to Twitch...");
+                var directWs = new ClientWebSocket();
+                await directWs.ConnectAsync(new Uri("wss://irc-ws.chat.twitch.tv:443"), cancellationToken);
+                Console.WriteLine("TwitchChatManager: Direct connection successful.");
+                return directWs;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"TwitchChatManager: Direct connection failed: {ex.Message}");
+                if (!ConfigManager.Settings.UseTwitchProxy)
+                {
+                    throw new Exception("Не удалось подключиться к Twitch Chat напрямую.");
+                }
+            }
         }
 
-        // 2. Fallback to Cloud Proxies
+        // 2. Cloud Proxies attempt
         if (ConfigManager.Settings.UseTwitchProxy)
         {
             var availableProxies = ConfigManager.Settings.CloudProxies
@@ -115,8 +122,10 @@ public class TwitchChatManager
                     Console.WriteLine($"TwitchChatManager: Proxy {proxy.Name} failed: {ex.Message}");
                 }
             }
+            
+            throw new Exception("Не удалось подключиться ни напрямую, ни к одному прокси-серверу Twitch.");
         }
 
-        throw new Exception("Все попытки подключения к Twitch Chat исчерпаны (напрямую и через прокси).");
+        throw new Exception("Все попытки подключения к Twitch Chat исчерпаны.");
     }
 }

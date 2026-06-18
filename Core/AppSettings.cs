@@ -68,8 +68,14 @@ public class AppSettings
     
     // Twitch Proxy Settings
     public bool UseTwitchProxy { get; set; } = false;
+    public bool UseStrictTwitchProxy { get; set; } = false;
     public ObservableCollection<CloudProxyServer> CloudProxies { get; set; } = new ObservableCollection<CloudProxyServer>();
     public DateTime LastQuotaResetDate { get; set; } = DateTime.UtcNow;
+
+    // Emote Proxy Settings
+    public bool UseCustomEmoteProxy { get; set; } = false;
+    public bool UseStrictEmoteProxy { get; set; } = false;
+    public bool UseTwitchProxyForEmotes { get; set; } = false;
     
     // UI Design Settings
     public ChatFont Font { get; set; } = ChatFont.Outfit;

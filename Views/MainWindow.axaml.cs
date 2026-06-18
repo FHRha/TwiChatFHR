@@ -710,7 +710,7 @@ public partial class MainWindow : Window
         <h2>Шаг 4: Настройка в TwiChatFHR</h2>
         <ol>
             <li>Откройте настройки TwiChatFHR.</li>
-            <li>В поле <b>Custom Worker URL</b> просто вставьте скопированную ссылку. <b>Ничего дописывать в конец не нужно!</b> Приложение само подставит нужные параметры.</li>
+            <li>В поле ввода ссылки просто вставьте скопированную ссылку из Google Apps Script. <b>Ничего дописывать в конец не нужно!</b> Приложение само подставит нужные параметры.</li>
             <li>Пример: <code>https://script.google.com/macros/s/ВАШ_ИД/exec</code></li>
             <li>Готово! Приложение начнет скачивать эмоуты через сервера Google.</li>
         </ol>
@@ -784,8 +784,15 @@ public partial class MainWindow : Window
         CustomWorkerTextBox.Text = ConfigManager.Settings.CustomWorkerUrl;
         
         UseTwitchProxySwitch.IsChecked = ConfigManager.Settings.UseTwitchProxy;
+        UseStrictTwitchProxyCheck.IsChecked = ConfigManager.Settings.UseStrictTwitchProxy;
         ProxyListPanel.IsVisible = ConfigManager.Settings.UseTwitchProxy;
         ProxiesList.ItemsSource = ConfigManager.Settings.CloudProxies;
+
+        UseCustomEmoteProxySwitch.IsChecked = ConfigManager.Settings.UseCustomEmoteProxy;
+        UseStrictEmoteProxyCheck.IsChecked = ConfigManager.Settings.UseStrictEmoteProxy;
+        UseTwitchProxyForEmotesCheck.IsChecked = ConfigManager.Settings.UseTwitchProxyForEmotes;
+        EmotesProxyPanel.IsVisible = ConfigManager.Settings.UseCustomEmoteProxy;
+        EmotesProxyMainPanel.IsVisible = !ConfigManager.Settings.UseTwitchProxyForEmotes;
 
         if (ConfigManager.Settings.Language == "ru") LangComboBox.SelectedIndex = 0;
         else LangComboBox.SelectedIndex = 1;
@@ -1007,7 +1014,16 @@ public partial class MainWindow : Window
         if (_isUpdatingPreset) return;
         
         ConfigManager.Settings.UseTwitchProxy = UseTwitchProxySwitch.IsChecked ?? false;
+        ConfigManager.Settings.UseStrictTwitchProxy = UseStrictTwitchProxyCheck.IsChecked ?? false;
         ProxyListPanel.IsVisible = ConfigManager.Settings.UseTwitchProxy;
+        
+        ConfigManager.Settings.UseCustomEmoteProxy = UseCustomEmoteProxySwitch.IsChecked ?? false;
+        ConfigManager.Settings.UseStrictEmoteProxy = UseStrictEmoteProxyCheck.IsChecked ?? false;
+        ConfigManager.Settings.UseTwitchProxyForEmotes = UseTwitchProxyForEmotesCheck.IsChecked ?? false;
+        
+        EmotesProxyPanel.IsVisible = ConfigManager.Settings.UseCustomEmoteProxy;
+        EmotesProxyMainPanel.IsVisible = !ConfigManager.Settings.UseTwitchProxyForEmotes;
+        
         ConfigManager.Save();
     }
 
@@ -1129,6 +1145,19 @@ CMD [""npm"", ""start""]</code></pre>
             <li>Откройте в спейсе вкладку <b>Logs</b>: там будет написан готовый <b>URL Сервера</b>. Просто скопируйте его и вставьте в приложение!</li>
             <li>В поле <b>Токен</b> впишите пароль, который вы придумали на Шаге 2.</li>
             <li>Включите маршрутизацию. Готово!</li>
+        </ol>
+    </div>
+
+    <div class='step'>
+        <h2>Альтернатива: Использование Google Cloud Run</h2>
+        <p><i style='color: #F87171;'>Внимание: Для использования Google Cloud потребуется привязать работающую банковскую карту (сам сервис предоставляется бесплатно в рамках щедрых ежемесячных лимитов).</i></p>
+        <p>Этот скрипт также можно развернуть на <b>Google Cloud Run</b> (изначально мы пытались реализовать прокси именно там). Для этого в нашем репозитории есть удобный автоматический скрипт:</p>
+        <ol>
+            <li>Создайте аккаунт Google Cloud и активируйте платежный профиль (Billing).</li>
+            <li>Откройте Google Cloud Shell (иконка терминала вверху справа).</li>
+            <li>Скачайте скрипт: <code>wget https://raw.githubusercontent.com/FHRha/TwiChatFHR/main/CloudProxy/deploy.sh</code></li>
+            <li>Запустите его: <code>bash deploy.sh</code></li>
+            <li>Скрипт сам всё настроит, сгенерирует токен, выложит сервер и в конце выдаст вам готовые <b>URL Сервера</b> и <b>Токен</b> для вставки в приложение!</li>
         </ol>
     </div>
 
