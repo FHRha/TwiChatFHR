@@ -12,68 +12,66 @@ namespace TwitchChatCore.Server;
 public class TwitchChatManager
 {
     private CloudProxyServer? _activeProxy;
-    private Stopwatch _proxyStopwatch = new Stopwatch();
     private CancellationTokenSource _timerCts = new CancellationTokenSource();
     
     public event Action<CloudProxyServer?>? ActiveProxyChanged;
-    public event Action? ProxyUsageUpdated;
 
     public TwitchChatManager()
     {
-        CheckAndResetMonthlyQuotas();
-        StartUsageTimer();
+        StartHealthCheckTimer();
     }
 
-    private void CheckAndResetMonthlyQuotas()
-    {
-        var now = DateTime.UtcNow;
-        if (now.Month != ConfigManager.Settings.LastQuotaResetDate.Month || 
-            now.Year != ConfigManager.Settings.LastQuotaResetDate.Year)
-        {
-            foreach (var proxy in ConfigManager.Settings.CloudProxies)
-            {
-                proxy.UsageSeconds = 0;
-            }
-            ConfigManager.Settings.LastQuotaResetDate = now;
-            ConfigManager.Save();
-        }
-    }
-
-    private void StartUsageTimer()
+    private void StartHealthCheckTimer()
     {
         Task.Run(async () =>
         {
+            using var httpClient = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(3) };
             while (!_timerCts.Token.IsCancellationRequested)
             {
-                await Task.Delay(1000);
-                if (_activeProxy != null && _proxyStopwatch.IsRunning)
+                if (ConfigManager.Settings.UseTwitchProxy)
                 {
-                    _activeProxy.UsageSeconds++;
-                    // Save to disk every 60 seconds to avoid IO spam
-                    if (_activeProxy.UsageSeconds % 60 == 0)
+                    foreach (var proxy in ConfigManager.Settings.CloudProxies.ToList())
                     {
-                        ConfigManager.Save();
+                        if (string.IsNullOrWhiteSpace(proxy.Url)) continue;
+                        
+                        try
+                        {
+                            var httpUrl = proxy.Url.Replace("wss://", "https://").Replace("ws://", "http://");
+                            var sw = Stopwatch.StartNew();
+                            var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, httpUrl);
+                            var response = await httpClient.SendAsync(request, _timerCts.Token);
+                            sw.Stop();
+                            
+                            if (response.IsSuccessStatusCode)
+                            {
+                                proxy.StatusText = $"OK: {sw.ElapsedMilliseconds} мс";
+                                proxy.StatusColor = "#10B981"; // Green
+                            }
+                            else
+                            {
+                                proxy.StatusText = $"Ошибка: {(int)response.StatusCode}";
+                                proxy.StatusColor = "#EF4444"; // Red
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            proxy.StatusText = "Оффлайн";
+                            proxy.StatusColor = "#EF4444";
+                        }
                     }
-                    ProxyUsageUpdated?.Invoke();
                 }
+                
+                await Task.Delay(5000, _timerCts.Token);
             }
         });
-    }
-    
-    public void StopActiveProxyTimer()
-    {
-        _proxyStopwatch.Stop();
-        _activeProxy = null;
-        ActiveProxyChanged?.Invoke(null);
-        ConfigManager.Save();
     }
 
     public async Task<ClientWebSocket> ConnectAsync(CancellationToken cancellationToken)
     {
-        StopActiveProxyTimer();
-        CheckAndResetMonthlyQuotas();
+        _activeProxy = null;
+        ActiveProxyChanged?.Invoke(null);
 
-        // 1. Direct connection attempt (Fastest, no limits, reveals IP)
+        // 1. Direct connection attempt
         try
         {
             Console.WriteLine("TwitchChatManager: Trying direct connection to Twitch...");
@@ -87,11 +85,11 @@ public class TwitchChatManager
             Console.WriteLine($"TwitchChatManager: Direct connection failed: {ex.Message}");
         }
 
-        // 2. Fallback to Cloud Proxies if enabled and direct connection failed
+        // 2. Fallback to Cloud Proxies
         if (ConfigManager.Settings.UseTwitchProxy)
         {
             var availableProxies = ConfigManager.Settings.CloudProxies
-                .Where(p => p.IsEnabled && p.UsageSeconds < 360000)
+                .Where(p => p.IsEnabled)
                 .ToList();
 
             foreach (var proxy in availableProxies)
@@ -108,7 +106,6 @@ public class TwitchChatManager
                     Console.WriteLine($"TwitchChatManager: Connected via proxy {proxy.Name}.");
                     
                     _activeProxy = proxy;
-                    _proxyStopwatch.Restart();
                     ActiveProxyChanged?.Invoke(_activeProxy);
                     
                     return proxyWs;

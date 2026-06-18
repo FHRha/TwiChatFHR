@@ -6,19 +6,30 @@ namespace TwitchChatCore.Core.Models;
 
 public class CloudProxyServer : INotifyPropertyChanged
 {
-    private int _usageSeconds;
+    private string _statusText = "Не проверен";
+    private string _statusColor = "#94A3B8";
 
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = "Новый Прокси";
     public string Url { get; set; } = "";
     public string Token { get; set; } = "";
     
-    public int UsageSeconds 
+    public string StatusText 
     { 
-        get => _usageSeconds; 
+        get => _statusText; 
         set 
         { 
-            _usageSeconds = value; 
+            _statusText = value; 
+            OnPropertyChanged(); 
+        } 
+    }
+
+    public string StatusColor 
+    { 
+        get => _statusColor; 
+        set 
+        { 
+            _statusColor = value; 
             OnPropertyChanged(); 
         } 
     }

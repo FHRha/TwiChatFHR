@@ -388,10 +388,7 @@
                                             </Grid>
                                             <TextBox Text="{Binding Url}" Watermark="wss://twichat-proxy-..." TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
                                             <TextBox Text="{Binding Token}" Watermark="X-Proxy-Token" TextChanged="ProxyItem_TextChanged" FontSize="12" Padding="8,6"/>
-                                            <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,0">
-                                                <ProgressBar Grid.Column="0" Minimum="0" Maximum="360000" Value="{Binding UsageSeconds}" Height="6" CornerRadius="3" Foreground="#10B981" Background="#1E293B" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding UsageSeconds, StringFormat='{}{0} / 360000 s'}" FontSize="10" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                                            </Grid>
+                                            <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{Binding StatusColor}" HorizontalAlignment="Right" Margin="0,4,4,0"/>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
