@@ -78,16 +78,16 @@ wss.on('connection', (clientWs, req) => {
     const twitchWs = new WebSocket(TWITCH_WS_URL);
 
     // Relay messages from client to Twitch
-    clientWs.on('message', (message) => {
+    clientWs.on('message', (message, isBinary) => {
         if (twitchWs.readyState === WebSocket.OPEN) {
-            twitchWs.send(message);
+            twitchWs.send(message, { binary: isBinary });
         }
     });
 
     // Relay messages from Twitch to client
-    twitchWs.on('message', (message) => {
+    twitchWs.on('message', (message, isBinary) => {
         if (clientWs.readyState === WebSocket.OPEN) {
-            clientWs.send(message);
+            clientWs.send(message, { binary: isBinary });
         }
     });
 
