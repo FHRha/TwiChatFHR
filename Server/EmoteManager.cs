@@ -34,17 +34,16 @@ public class EmoteManager
             var url = $"{mirror}{endpoint}";
             if (mirror.Contains("script.google.com") || mirror.EndsWith("?url=") || mirror.EndsWith("&url="))
             {
-                var cleanMirror = mirror;
-                if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
-                else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
-                url = $"{cleanMirror}?url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
-                
-                // Keep token query parameter if present
-                if (mirror.Contains("?token="))
+                if (mirror.EndsWith("?url=") || mirror.EndsWith("&url="))
                 {
-                    var tokenPart = mirror.Substring(mirror.IndexOf("?token="));
-                    if (tokenPart.Contains("&url=")) tokenPart = tokenPart.Substring(0, tokenPart.IndexOf("&url="));
-                    url = $"{cleanMirror}{tokenPart}&url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
+                    url = $"{mirror}{Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
+                }
+                else
+                {
+                    var cleanMirror = mirror;
+                    if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
+                    else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
+                    url = $"{cleanMirror}?url={Uri.EscapeDataString("https://api.7tv.app" + endpoint)}";
                 }
             }
             try
@@ -452,17 +451,16 @@ public class EmoteManager
                 var url = $"{mirror}{pathAndQuery}";
                 if (mirror.Contains("script.google.com") || mirror.EndsWith("?url=") || mirror.EndsWith("&url="))
                 {
-                    var cleanMirror = mirror;
-                    if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
-                    else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
-                    url = $"{cleanMirror}?url={Uri.EscapeDataString(originalUrl)}";
-                    
-                    // Keep token query parameter if present
-                    if (mirror.Contains("?token="))
+                    if (mirror.EndsWith("?url=") || mirror.EndsWith("&url="))
                     {
-                        var tokenPart = mirror.Substring(mirror.IndexOf("?token="));
-                        if (tokenPart.Contains("&url=")) tokenPart = tokenPart.Substring(0, tokenPart.IndexOf("&url="));
-                        url = $"{cleanMirror}{tokenPart}&url={Uri.EscapeDataString(originalUrl)}";
+                        url = $"{mirror}{Uri.EscapeDataString(originalUrl)}";
+                    }
+                    else
+                    {
+                        var cleanMirror = mirror;
+                        if (mirror.Contains("?url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("?url="));
+                        else if (mirror.Contains("&url=")) cleanMirror = mirror.Substring(0, mirror.IndexOf("&url="));
+                        url = $"{cleanMirror}?url={Uri.EscapeDataString(originalUrl)}";
                     }
                 }
                 for (int i = 0; i < 2; i++)
