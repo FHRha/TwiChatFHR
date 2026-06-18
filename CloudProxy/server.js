@@ -29,8 +29,8 @@ const server = http.createServer((req, res) => {
             const token = parsedUrl.searchParams.get('token');
             const targetUrlStr = parsedUrl.searchParams.get('url');
 
+            // Validate
             if (!PROXY_TOKEN || token !== PROXY_TOKEN) {
-                console.log(`[${new Date().toISOString()}] HTTP Proxy rejected: Unauthorized.`);
                 res.writeHead(401, { 'Content-Type': 'text/plain' });
                 res.end('Unauthorized');
                 return;
@@ -70,8 +70,6 @@ const server = http.createServer((req, res) => {
                 'Referer': 'https://7tv.app/',
             };
 
-            console.log(`[${new Date().toISOString()}] HTTP Proxy ${isImageRequest ? 'image' : 'API '}: ${targetUrlStr}`);
-
             (async () => {
                 try {
                     const controller = new AbortController();
@@ -85,8 +83,10 @@ const server = http.createServer((req, res) => {
                     });
                     clearTimeout(timeoutId);
 
-                    console.log(`[${new Date().toISOString()}] HTTP Proxy → ${response.status} from ${targetUrlStr}`);
-
+                    // Only log non-200 responses (errors worth knowing about)
+                    if (response.status >= 400) {
+                        console.log(`[${new Date().toISOString()}] HTTP Proxy ${response.status} from ${targetUrlStr}`);
+                    }
                     if (!res.headersSent) {
                         const forwardHeaders = {
                             'Access-Control-Allow-Origin': '*',
