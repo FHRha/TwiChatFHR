@@ -46,7 +46,7 @@ public class CustomPreset
     public string ColorVip { get; set; } = "#EC4899";
 }
 
-public class AppSettings
+public partial class AppSettings
 {
     public List<CustomPreset> CustomPresets { get; set; } = new List<CustomPreset>
     {

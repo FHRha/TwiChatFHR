@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>TwiChatWeb</AssemblyName>
+    <RootNamespace>TwitchChatCore</RootNamespace>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DefaultItemExcludes>$(DefaultItemExcludes);cache\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- Reference shared Core and Server source files from the parent project -->
+  <ItemGroup>
+    <Compile Include="../Core/**/*.cs" />
+    <!-- Include all Server files except the original LocalServerManager which is replaced by WebServerManager.cs -->
+    <Compile Include="../Server/**/*.cs" Exclude="../Server/LocalServerManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Static web assets shipped with the server -->
+  <ItemGroup>
+    <Content Include="admin/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="overlay/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../Server/Resources/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Server/Resources/%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Content>
+  </ItemGroup>
+</Project>

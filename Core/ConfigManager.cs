@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace TwitchChatCore.Core;
 
-public static class ConfigManager
+public static partial class ConfigManager
 {
     public static string AppDir => Path.GetDirectoryName(Environment.ProcessPath) ?? AppDomain.CurrentDomain.BaseDirectory;
     public static string DataDir => Path.Combine(AppDir, "cache");

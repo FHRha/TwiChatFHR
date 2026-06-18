@@ -1,0 +1,23 @@
+services:
+  twichat:
+    build:
+      context: ..
+      dockerfile: WebApp/Dockerfile
+    image: twichatfhr-web
+    container_name: twichat-web
+    ports:
+      - "${PORT:-7860}:7860"
+    volumes:
+      - ./data:/app/cache
+    environment:
+      - PORT=7860
+      - TWITCH_CHANNEL=${TWITCH_CHANNEL:-}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

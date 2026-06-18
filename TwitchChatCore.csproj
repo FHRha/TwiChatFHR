@@ -6,7 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <DefaultItemExcludes>$(DefaultItemExcludes);artifact\**;cache\**;TwiChatUpdater\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifact\**;cache\**;TwiChatUpdater\**;WebApp\**</DefaultItemExcludes>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>

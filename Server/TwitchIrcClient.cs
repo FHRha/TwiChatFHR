@@ -12,7 +12,7 @@ using TwitchChatCore.Core;
 
 namespace TwitchChatCore.Server;
 
-public class TwitchIrcClient
+public partial class TwitchIrcClient
 {
     private readonly ChatHub _chatHub;
     private readonly BadgeManager _badgeManager;

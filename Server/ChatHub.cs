@@ -23,7 +23,7 @@ public class ChatClient
     }
 }
 
-public class ChatHub
+public partial class ChatHub
 {
     private readonly ConcurrentDictionary<Guid, ChatClient> _clients = new();
 

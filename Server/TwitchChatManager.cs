@@ -9,7 +9,7 @@ using TwitchChatCore.Core.Models;
 
 namespace TwitchChatCore.Server;
 
-public class TwitchChatManager
+public partial class TwitchChatManager
 {
     private CloudProxyServer? _activeProxy;
     private CancellationTokenSource _timerCts = new CancellationTokenSource();

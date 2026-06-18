@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TwiChatFHR — Панель настроек</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-base:    #0F172A;
+            --bg-panel:   #1E293B;
+            --bg-card:    #0F172A;
+            --bg-input:   #0F172A;
+            --border:     #334155;
+            --border-h:   #475569;
+            --accent:     #38BDF8;
+            --accent-dim: #0EA5E9;
+            --text-1:     #F8FAFC;
+            --text-2:     #E2E8F0;
+            --text-3:     #94A3B8;
+            --text-4:     #64748B;
+            --green:      #10B981;
+            --red:        #EF4444;
+            --amber:      #F59E0B;
+            --radius:     10px;
+            --transition: 0.18s ease;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-2);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Top bar ──────────────────────────────────────────────────────── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 20px;
+            height: 52px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .topbar-logo {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .topbar-logo svg { color: var(--accent); }
+        .topbar-title { font-size: 16px; font-weight: 700; color: var(--text-1); }
+        .topbar-spacer { flex: 1; }
+
+        .status-pill {
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-3);
+            transition: var(--transition);
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--text-4);
+            transition: background 0.3s;
+        }
+        .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .status-dot.error     { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+        .obs-link-group {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .obs-link-input {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-family: 'Outfit', monospace;
+            width: 240px;
+            cursor: default;
+            outline: none;
+        }
+        .btn-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-3);
+            border-radius: 6px;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-icon.copied { border-color: var(--green); color: var(--green); }
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-3);
+            border-radius: 6px;
+            padding: 4px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+        /* ── Main layout ──────────────────────────────────────────────────── */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Settings panel ───────────────────────────────────────────────── */
+        .settings-panel {
+            width: 400px;
+            flex-shrink: 0;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .settings-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 16px 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .settings-scroll::-webkit-scrollbar { width: 4px; }
+        .settings-scroll::-webkit-scrollbar-track { background: transparent; }
+        .settings-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* ── Section headers ──────────────────────────────────────────────── */
+        .section {
+            margin-bottom: 4px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            margin-top: 20px;
+        }
+        .section-header:first-child { margin-top: 4px; }
+        .section-icon { color: var(--accent); flex-shrink: 0; }
+        .section-title { font-size: 15px; font-weight: 700; color: var(--accent); }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+
+        /* ── Form elements ────────────────────────────────────────────────── */
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        .field label { font-size: 12px; color: var(--text-3); font-weight: 500; }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .row-2-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+
+        input[type="text"], input[type="password"], select, textarea {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-2);
+            border-radius: 7px;
+            padding: 7px 11px;
+            font-size: 13px;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            width: 100%;
+            transition: border-color var(--transition);
+            -webkit-appearance: none;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+        select option { background: var(--bg-panel); }
+
+        textarea { resize: vertical; min-height: 80px; font-size: 12px; font-family: monospace; }
+
+        /* ── Slider ───────────────────────────────────────────────────────── */
+        .slider-row { display: flex; flex-direction: column; gap: 4px; }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; }
+        .slider-label { font-size: 13px; color: var(--text-2); }
+        .slider-val { font-size: 12px; color: var(--text-3); font-weight: 600; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%; height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(56,189,248,0.5);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* ── Checkboxes ───────────────────────────────────────────────────── */
+        .checks-grid { display: flex; flex-direction: column; gap: 2px; }
+        .check-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-2);
+            user-select: none;
+        }
+        .check-label:hover { color: var(--text-1); }
+        input[type="checkbox"] { display: none; }
+        .check-box {
+            width: 16px; height: 16px;
+            border-radius: 4px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-input);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+        input[type="checkbox"]:checked + .check-box {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        input[type="checkbox"]:checked + .check-box::after {
+            content: '';
+            width: 9px; height: 6px;
+            border-left: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: rotate(-45deg) translateY(-1px);
+            display: block;
+        }
+
+        /* ── Toggle switch ────────────────────────────────────────────────── */
+        .toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 0;
+        }
+        .toggle-text { font-size: 13px; color: var(--text-2); }
+        .toggle-sub { font-size: 11px; color: var(--text-4); margin-top: 1px; }
+        .toggle-switch {
+            position: relative;
+            width: 36px; height: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { display: none; }
+        .toggle-track {
+            position: absolute; inset: 0;
+            border-radius: 10px;
+            background: var(--border);
+            transition: background var(--transition);
+        }
+        .toggle-thumb {
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform var(--transition);
+        }
+        .toggle-switch input:checked ~ .toggle-track { background: var(--accent); }
+        .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+        /* ── Color pickers ────────────────────────────────────────────────── */
+        .colors-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        .color-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .color-item label { font-size: 10px; color: var(--text-3); text-align: center; line-height: 1.2; }
+        input[type="color"] {
+            width: 44px; height: 36px;
+            border: 1.5px solid var(--border);
+            border-radius: 7px;
+            cursor: pointer;
+            background: none;
+            padding: 2px;
+            outline: none;
+            transition: border-color var(--transition);
+        }
+        input[type="color"]:hover { border-color: var(--accent); }
+
+        /* ── Proxy cards ──────────────────────────────────────────────────── */
+        .proxy-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .proxy-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .proxy-name { font-size: 13px; font-weight: 600; color: var(--text-2); }
+        .proxy-status { font-size: 11px; color: var(--text-4); }
+        .btn-remove {
+            background: transparent;
+            border: none;
+            color: var(--red);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background var(--transition);
+        }
+        .btn-remove:hover { background: rgba(239,68,68,0.1); }
+
+        /* ── Presets ──────────────────────────────────────────────────────── */
+        .preset-slot {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 6px;
+            align-items: center;
+        }
+        .btn-sm {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-3);
+            border-radius: 6px;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+        }
+        .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-sm.success { border-color: var(--green); color: var(--green); }
+
+        /* ── Action buttons ───────────────────────────────────────────────── */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+            color: #0F172A;
+            border: none;
+            border-radius: 7px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity var(--transition), transform 0.1s;
+            font-family: 'Outfit', sans-serif;
+            width: 100%;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 7px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Outfit', sans-serif;
+            width: 100%;
+        }
+        .btn-secondary:hover { border-color: var(--border-h); color: var(--text-1); }
+
+        .btn-add-proxy {
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--accent);
+            border-radius: 7px;
+            padding: 7px;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: var(--transition);
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-add-proxy:hover { border-color: var(--accent); background: rgba(56,189,248,0.05); }
+
+        /* ── Save status ──────────────────────────────────────────────────── */
+        .save-bar {
+            height: 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        .save-status { color: var(--text-4); transition: color 0.3s; }
+        .save-status.saving { color: var(--amber); }
+        .save-status.saved  { color: var(--green); }
+        .save-status.error  { color: var(--red); }
+
+        /* ── Preview panel ────────────────────────────────────────────────── */
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #0D1117;
+        }
+        .preview-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-panel);
+            flex-shrink: 0;
+        }
+        .preview-title { font-size: 13px; font-weight: 600; color: var(--text-3); }
+        .preview-channel { font-size: 12px; color: var(--accent); }
+
+        .preview-frame-wrap {
+            flex: 1;
+            position: relative;
+            background: repeating-linear-gradient(
+                45deg,
+                #0a0f1a 0px, #0a0f1a 10px,
+                #0d1117 10px, #0d1117 20px
+            );
+        }
+        .preview-frame-wrap::before {
+            content: 'OBS Preview';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            color: var(--text-4);
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #preview-iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%; height: 100%;
+            border: none;
+            background: transparent;
+            z-index: 1;
+        }
+
+        /* ── Login / Setup overlays ───────────────────────────────────────── */
+        .fullscreen-overlay {
+            position: fixed; inset: 0;
+            background: var(--bg-base);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100;
+        }
+        .auth-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 36px;
+            width: 380px;
+            display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        }
+        .auth-card h1 {
+            font-size: 22px; font-weight: 700; color: var(--text-1);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .auth-card h1 svg { color: var(--accent); }
+        .auth-card p { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+        .auth-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 7px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--red);
+            display: none;
+        }
+
+        /* ── Emote progress bar ───────────────────────────────────────────── */
+        .emote-progress {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .emote-progress.visible { display: block; }
+        .emote-progress-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .emote-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* ── Blacklist textarea section ───────────────────────────────────── */
+        .collapse-section { display: none; }
+        .collapse-section.open { display: block; }
+
+        /* Utility */
+        .hint { font-size: 11px; color: var(--text-4); line-height: 1.4; }
+        .mt-6 { margin-top: 6px; }
+        .mt-10 { margin-top: 10px; }
+        .gap-6 { display: flex; flex-direction: column; gap: 6px; }
+        .gap-10 { display: flex; flex-direction: column; gap: 10px; }
+
+        /* Scrollbar for Firefox */
+        * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+        /* Responsive: stack on small screens */
+        @media (max-width: 800px) {
+            .preview-panel { display: none; }
+            .settings-panel { width: 100%; border-right: none; }
+            .obs-link-input { width: 160px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LOGIN / SETUP OVERLAY  (shown until authenticated)
+═══════════════════════════════════════════════════════════ -->
+<div class="fullscreen-overlay" id="auth-overlay">
+    <div class="auth-card">
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3L3 3C1.9 3 1 3.9 1 5v14c0 1.1.9 2 2 2l18 0c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H4c-.55 0-1-.45-1-1V6c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1z"/><path d="M9.5 16v-1.25c0-.55.45-1 1-1H13v-1.5h-2.5c-.55 0-1-.45-1-1v-1.5c0-.55.45-1 1-1h3c.55 0 1 .45 1 1V16h-5z" opacity="0"/></svg>
+            TwiChatFHR
+        </h1>
+        <p id="auth-desc">Введите логин и пароль для доступа к панели настроек.</p>
+        <div class="auth-error" id="auth-error">Неверный логин или пароль</div>
+        <div class="gap-6">
+            <div class="field">
+                <label>Логин</label>
+                <input type="text" id="auth-username" value="admin" autocomplete="username" />
+            </div>
+            <div class="field">
+                <label>Пароль</label>
+                <input type="password" id="auth-password" autocomplete="current-password" />
+            </div>
+        </div>
+        <button class="btn-primary" id="auth-submit">Войти</button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN APP  (hidden until authenticated)
+═══════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none; flex-direction:column; height:100%;">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+        <div class="topbar-logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:var(--accent)">
+                <path d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2L3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29l-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.7V3.43h11.44v7.86z"/>
+            </svg>
+            <span class="topbar-title">TwiChatFHR</span>
+        </div>
+        <div class="topbar-spacer"></div>
+
+        <div class="status-pill">
+            <div class="status-dot" id="status-dot"></div>
+            <span id="status-text">Подключение...</span>
+        </div>
+
+        <div class="obs-link-group">
+            <input type="text" class="obs-link-input" id="obs-url" readonly value="" title="Ссылка для OBS Browser Source" />
+            <button class="btn-icon" id="copy-btn" title="Скопировать ссылку">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            </button>
+        </div>
+
+        <button class="btn-logout" id="logout-btn">Выйти</button>
+    </header>
+
+    <!-- Main -->
+    <div class="main-layout">
+
+        <!-- ══ Settings Panel ══════════════════════════════════════════════ -->
+        <aside class="settings-panel">
+            <div class="settings-scroll">
+
+                <!-- Emote progress -->
+                <div class="emote-progress" id="emote-progress">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span id="emote-progress-text" style="font-size:12px;color:var(--text-3);">Загрузка эмоутов...</span>
+                    </div>
+                    <div class="emote-progress-bar">
+                        <div class="emote-progress-fill" id="emote-progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- ── ⭐ Тема и пресеты ───────────────────────────────── -->
+                <div class="section">
+                    <div class="section-header">
+                        <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26Z"/></svg>
+                        <span class="section-title">Design Studio</span>
+                    </div>
+
+                    <div class="gap-10">
+                        <div class="row-2">
+                            <div class="field">
+                                <label>Тема</label>
+                                <select id="cfg-theme">
+                                    <option value="glass">Glass</option>
+                                    <option value="cyberpunk">Cyberpunk</option>
+                                    <option value="minimal">Minimal</option>
+                                    <option value="retro">Retro</option>
+                                    <option value="custom">Custom</option>
+                                    <option value="custom1">Custom 1</option>
+                                    <option value="custom2">Custom 2</option>
+                                    <option value="custom3">Custom 3</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Шрифт</label>
+                                <select id="cfg-font">
+                                    <option value="outfit">Outfit</option>
+                                    <option value="roboto">Roboto</option>
+                                    <option value="couriernew">Courier New</option>
+                                    <option value="comicsans">Comic Sans</option>
+                                    <option value="impact">Impact</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Custom Presets -->
+                        <div class="field">
+                            <label>Пресеты</label>
+                            <div class="gap-6" id="preset-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- ── 💬 Внешний вид ──────────────────────────────────── -->
+                <div class="section">
+                    <div class="section-header">
+                        <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                        <span class="section-title">Внешний вид сообщений</span>
+                    </div>
+
+                    <div class="gap-10">
+                        <div class="row-2">
+                            <div class="field">
+                                <label>Рамка</label>
+                                <select id="cfg-border">
+                                    <option value="glass">Glass</option>
+                                    <option value="neon">Neon</option>
+                                    <option value="solid">Solid</option>
+                                    <option value="none">None</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Форма</label>
+                                <select id="cfg-shape">
+                                    <option value="square">Square</option>
+                                    <option value="round">Round</option>
+                                    <option value="tail">Tail</option>
+                                    <option value="noborder">No Border</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row-2">
+                            <div class="field">
+                                <label>Лэйаут</label>
+                                <select id="cfg-layout">
+                                    <option value="inline">Inline</option>
+                                    <option value="nickabove">Ник сверху</option>
+                                    <option value="columns">Колонки</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Анимация</label>
+                                <select id="cfg-anim">
+                                    <option value="pop">Pop</option>
+                                    <option value="slide">Slide</option>
+                                    <option value="fade">Fade</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="slider-row">
+                            <div class="slider-header">
+                                <span class="slider-label">Отступ сообщений</span>
+                                <span class="slider-val" id="spacing-val">4px</span>
+                            </div>
+                            <input type="range" id="cfg-spacing" min="0" max="24" step="1" value="4">
+                        </div>
+                        <div class="slider-row">
+                            <div class="slider-header">
+                                <span class="slider-label">Прозрачность фона</span>
+                                <span class="slider-val" id="opacity-val">45%</span>
+                            </div>
+                            <input type="range" id="cfg-opacity" min="0" max="100" step="1" value="45">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- ── 🎨 Цвета ────────────────────────────────────────── -->
+                <div class="section">
+                    <div class="section-header">
+                        <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                        <span class="section-title">Цвета</span>
+                    </div>
+
+                    <div class="colors-grid">
+                        <div class="color-item"><label>Фон сообщ.</label><input type="color" id="cfg-msgbg" value="#141923"></div>
+                        <div class="color-item"><label>Цвет текста</label><input type="color" id="cfg-textcolor" value="#FFFFFF"></div>
+                        <div class="color-item"><label>Стример</label><input type="color" id="cfg-broadcaster" value="#F59E0B"></div>
+                        <div class="color-item"><label>Модератор</label><input type="color" id="cfg-mod" value="#10B981"></div>
+                        <div class="color-item"><label>VIP</label><input type="color" id="cfg-vip" value="#EC4899"></div>
+                    </div>
+                    <div class="mt-6 field">
+                        <label>Глобальный фон (с прозрачностью)</label>
+                        <input type="color" id="cfg-globalbg" value="#000000" style="width:100%;height:36px;">
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- ── ⚙️ Дополнительно ───────────────────────────────── -->
+                <div class="section">
+                    <div class="section-header">
+                        <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                        <span class="section-title">Дополнительно</span>
+                    </div>
+
+                    <div class="gap-10">
+                        <div class="slider-row">
+                            <div class="slider-header">
+                                <span class="slider-label">Размер шрифта</span>
+                                <span class="slider-val" id="fontsize-val">14px</span>
+                            </div>
+                            <input type="range" id="cfg-fontsize" min="10" max="32" step="1" value="14">
+                        </div>
+
+                        <div class="checks-grid">
+                            <label class="check-label"><input type="checkbox" id="cfg-grouping" checked><span class="check-box"></span>Группировать сообщения</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-mentions"><span class="check-box"></span>Подсвечивать упоминания</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-firstmsg" checked><span class="check-box"></span>Первое сообщение 👋</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-hidebg"><span class="check-box"></span>Скрыть фон</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-hidebadges"><span class="check-box"></span>Скрыть значки</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-hidebots"><span class="check-box"></span>Скрыть ботов</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-hidemods"><span class="check-box"></span>Скрыть сообщения модов</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-hidevips"><span class="check-box"></span>Скрыть сообщения VIP</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-rolecolors" checked><span class="check-box"></span>Цвета ролей (Mod/VIP/Broadcaster)</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-outline" checked><span class="check-box"></span>Обводка текста</label>
+                            <label class="check-label"><input type="checkbox" id="cfg-effects"><span class="check-box"></span>Команды эффектов чата</label>
+                        </div>
+
+                        <!-- Blacklist -->
+                        <div>
+                            <button class="btn-secondary" onclick="toggleBlacklist()" id="blacklist-btn">✏️ Редактировать блэклист</button>
+                            <div class="collapse-section mt-6" id="blacklist-section">
+                                <div class="field">
+                                    <label>Один ник на строку. Строки с # игнорируются.</label>
+                                    <textarea id="blacklist-text" rows="5" placeholder="# Ники для игнорирования&#10;streamelements&#10;nightbot"></textarea>
+                                </div>
+                                <button class="btn-primary mt-6" onclick="saveBlacklist()" style="font-size:12px;padding:6px;">💾 Сохранить блэклист</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- ── 😃 Эмоуты ─────────────────────────────────────── -->
+                <div class="section">
+                    <div class="section-header">
+                        <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" opacity="0"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8.5 9.5C8.5 8.67 9.17 8 10 8s1.5.67 1.5 1.5S10.83 11 10 11s-1.5-.67-1.5-1.5zm5.5 6.5c-1.62 0-2.99-.96-3.62-2.35-.15-.32.11-.65.46-.65h6.32c.35 0 .61.33.46.65C16.49 15.04 15.12 16 13.5 16zm1-5c-.83 0-1.5-.67-1.5-1.5S13.67 8 14.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                        <span class="section-title">Эмоуты</span>
+                    </div>
+
+                    <div class="checks-grid">
+                        <label class="check-label"><input type="checkbox" id="cfg-streamer-emotes" checked><span class="check-box"></span>Эмоуты стримера (канальные)</label>
+                        <label class="check-label"><input type="checkbox" id="cfg-global-emotes" checked><span class="check-box"></span>Twitch Global Emotes</label>
+                        <label class="check-label"><input type="checkbox" id="cfg-7tv-emotes"><span class="check-box"></span>7TV Global Emotes</label>
+                        <label class="check-label"><input type="checkbox" id="cfg-bttv-emotes"><span class="check-box"></span>BTTV Emotes</label>
+                        <label class="check-label"><input type="checkbox" id="cfg-ffz-emotes"><span class="check-box"></span>FFZ Emotes</label>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- ── 🌐 Соединение / Прокси ──────────────────────────── -->
+                <div class="section">
+                    <div class="section-header">
+                        <svg class="section-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4 2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                        <span class="section-title">Соединение</span>
+                    </div>
+
+                    <div class="gap-10">
+                        <div class="field">
+                            <label>Twitch канал</label>
+                            <input type="text" id="cfg-channel" placeholder="username" />
+                        </div>
+
+                        <!-- Twitch Proxy -->
+                        <div>
+                            <div class="toggle-row">
+                                <div>
+                                    <div class="toggle-text">Twitch Chat Proxy (Hugging Face)</div>
+                                    <div class="toggle-sub">Маршрутизация через свой прокси-сервер</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="cfg-use-proxy">
+                                    <span class="toggle-track"></span>
+                                    <span class="toggle-thumb"></span>
+                                </label>
+                            </div>
+                            <div id="proxy-section" style="display:none;" class="mt-6 gap-6">
+                                <label class="check-label"><input type="checkbox" id="cfg-strict-proxy"><span class="check-box"></span>Строгий режим (только прокси)</label>
+                                <label class="check-label"><input type="checkbox" id="cfg-proxy-emotes"><span class="check-box"></span>Использовать прокси для эмоутов</label>
+                                <div id="proxies-list" class="gap-6"></div>
+                                <button class="btn-add-proxy" onclick="addProxy()">+ Добавить прокси</button>
+                            </div>
+                        </div>
+
+                        <!-- Emote Proxy -->
+                        <div>
+                            <div class="toggle-row">
+                                <div>
+                                    <div class="toggle-text">Прокси для эмоутов</div>
+                                    <div class="toggle-sub">Google Apps Script / сторонний</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="cfg-use-emote-proxy">
+                                    <span class="toggle-track"></span>
+                                    <span class="toggle-thumb"></span>
+                                </label>
+                            </div>
+                            <div id="emote-proxy-section" style="display:none;" class="mt-6 gap-6">
+                                <label class="check-label"><input type="checkbox" id="cfg-strict-emote-proxy"><span class="check-box"></span>Строгий режим</label>
+                                <div class="field">
+                                    <label>URL Google Apps Script</label>
+                                    <input type="text" id="cfg-worker-url" placeholder="https://script.google.com/macros/s/.../exec" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-secondary" onclick="reconnect()" id="reconnect-btn">🔄 Переподключиться к Twitch</button>
+                    </div>
+                </div>
+
+            </div><!-- /settings-scroll -->
+
+            <!-- Save Bar -->
+            <div class="save-bar">
+                <span class="save-status" id="save-status">Изменения сохраняются автоматически</span>
+                <button class="btn-primary" style="width:auto;padding:5px 14px;font-size:12px;" onclick="saveNow()">💾 Сохранить</button>
+            </div>
+        </aside>
+
+        <!-- ══ Preview Panel ═══════════════════════════════════════════════ -->
+        <main class="preview-panel">
+            <div class="preview-header">
+                <span class="preview-title">Превью оверлея (OBS)</span>
+                <span class="preview-channel" id="preview-channel">канал не задан</span>
+            </div>
+            <div class="preview-frame-wrap">
+                <iframe id="preview-iframe" src="/overlay" title="Chat Overlay Preview" allow="autoplay"></iframe>
+            </div>
+        </main>
+
+    </div><!-- /main-layout -->
+</div><!-- /app -->
+
+<script src="app.js"></script>
+</body>
+</html>
