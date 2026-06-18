@@ -1,36 +1,39 @@
-# ── Build stage ──────────────────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+#  TwiChatFHR — HuggingFace Space Dockerfile
+#  Просто создай Space (SDK: Docker) и вставь этот файл.
+# ════════════════════════════════════════════════════════════════════
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy the entire repo (build context is repo root)
-COPY . .
+# Скачиваем исходный код с GitHub
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && git clone --depth=1 https://github.com/FHRha/TwiChatFHR.git . \
+    && rm -rf /var/lib/apt/lists/*
 
-# Restore and publish only the web project
+# Собираем веб-проект
 RUN dotnet publish WebApp/TwiChatWeb.csproj \
     -c Release \
     -o /app \
     --no-self-contained \
     -r linux-x64
 
-# ── Runtime stage ─────────────────────────────────────────────────────────────
+# ── Runtime ──────────────────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
-
-# Install curl (used by health checks and install scripts)
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app .
 
-# Create volume mount point for persistent data (config, cache, blacklist)
 RUN mkdir -p /app/cache
 VOLUME ["/app/cache"]
 
-# HuggingFace Spaces default port; override with PORT env var
 ENV PORT=7860
 EXPOSE 7860
 
-# Health check — used by Docker and HF Spaces
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:7860/health || exit 1
 
 ENTRYPOINT ["dotnet", "TwiChatWeb.dll"]
